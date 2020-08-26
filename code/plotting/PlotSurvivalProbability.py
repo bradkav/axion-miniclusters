@@ -1,0 +1,161 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import rc
+import os
+
+rc('text', usetex=True)
+rc('font', size=18)
+
+root_dir = '../../data_ecc/'
+
+#------ Plot survival probability (as a function of a) --------------------
+
+alist_PL, psurv_a_PL = np.loadtxt(root_dir + 'SurvivalProbability_a_PL.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+alist_NFW, psurv_a_NFW = np.loadtxt(root_dir + 'SurvivalProbability_a_NFW.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+
+plt.figure(figsize=(7,5))
+plt.semilogx(alist_PL/1e3, psurv_a_PL, color='C0', label='Power-law')
+plt.semilogx(alist_NFW/1e3, psurv_a_NFW, color='C8', label='NFW')
+
+#plt.semilogx([1e21, 1e21], 'k-', label = "Eccentric")
+#plt.semilogx([1e21, 1e21], 'k--', label = "Circular")
+
+plt.axvline(x=8.33, color='gray', ls=':', zorder=0)
+plt.text(8.33, 0.2, "$r_\odot$", rotation = -90, color='gray')
+
+props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
+
+plt.xlim(0.08, 50.)
+plt.ylim(0,1.1)
+
+plt.yticks(np.linspace(0, 1, 6))
+
+plt.gca().tick_params(axis='x', pad=6)
+
+plt.xlabel('Galactocentric semi-major axis $a$ [kpc]')
+plt.ylabel('Survival Probability')
+plt.legend(loc = 'upper left' , fontsize=15)
+
+plt.savefig('../../plots/SurvivalProbability_a.pdf', bbox_inches='tight')
+
+
+
+#------ Plot survival probability (as a function of R) --------------------
+
+Rlist_PL, psurv_R_PL = np.loadtxt(root_dir + 'SurvivalProbability_R_PL.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+Rlist_NFW, psurv_R_NFW = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+density_NFW_init, density_NFW_final = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW.txt', delimiter =',', dtype='f8', usecols=(2,4), unpack=True)
+psurv_R_NFW_masscut = density_NFW_final/density_NFW_init
+
+Rlist_PL_circ, psurv_R_PL_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_PL_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+Rlist_NFW_circ, psurv_R_NFW_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+density_NFW_circ_init, density_NFW_circ_final = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(2,4), unpack=True)
+psurv_R_NFW_circ_masscut = density_NFW_circ_final/density_NFW_circ_init
+
+plt.figure(figsize=(7,5))
+plt.semilogx(Rlist_PL/1.e3, psurv_R_PL, color='C0', label='Power-law')
+plt.semilogx(Rlist_PL_circ/1e3, psurv_R_PL_circ, color='C0', linestyle='--')
+
+plt.semilogx(Rlist_NFW/1e3, psurv_R_NFW, color='C8', label='NFW')
+plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_circ, color='C8', linestyle='--')
+plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_circ_masscut, color='C8', linestyle='-.')
+
+
+plt.semilogx([1e21, 1e21], 'k-', label = "Eccentric")
+plt.semilogx([1e21, 1e21], 'k--', label = "Circular")
+
+plt.axvline(x=8.33, color='gray', ls=':', zorder=0)
+plt.text(8.33, 0.7, "$r_\odot$", rotation = -90, color='gray')
+plt.text(0.4, 0.42, r"NFW, ecc., $M_f > 1\% M_i$", rotation = 50, color='C8', fontsize=12, ha='center', va='center')
+
+props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
+
+plt.xlim(0.08, 50.)
+plt.ylim(0,1.1)
+
+plt.yticks(np.linspace(0, 1, 6))
+plt.gca().tick_params(axis='x', pad=6)
+
+plt.xlabel('Galactocentric radius $r$ [kpc]')
+plt.ylabel('Survival Probability')
+plt.legend(loc = 'lower right' , fontsize=15)
+
+plt.savefig('../../plots/SurvivalProbability_R.pdf', bbox_inches='tight')
+
+
+#------ Density as a function of R
+
+Rlist_PL_circ, rho_init_R_PL_circ, rho_R_PL_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_PL_circ.txt', delimiter =',', dtype='f8', usecols=(0,2,3), unpack=True)
+Rlist_PL, rho_init_R_PL, rho_R_PL = np.loadtxt(root_dir + 'SurvivalProbability_R_PL.txt', delimiter =',', dtype='f8', usecols=(0,2,3), unpack=True)
+Rlist_NFW, rho_init_R_NFW, rho_R_NFW, rho_R_NFW_masscut = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW.txt', delimiter =',', dtype='f8', usecols=(0,2,3, 4), unpack=True)
+#Rlist_NFW_circ, psurv_R_NFW_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+
+
+plt.figure(figsize=(7,5))
+plt.loglog(Rlist_PL_circ/1e3, rho_init_R_PL_circ/(4*np.pi*Rlist_PL_circ**2), 'k:', label="Galactic density profile")
+plt.loglog(Rlist_PL/1e3, rho_init_R_PL/(4*np.pi*Rlist_PL**2),'k--' , label="Unperturbed AMCs")
+plt.loglog(Rlist_PL/1e3, rho_R_PL/(4*np.pi*Rlist_PL**2),color='C0' , label="Perturbed AMCs (PL)")
+plt.loglog(Rlist_NFW/1e3, rho_R_NFW/(4*np.pi*Rlist_NFW**2),color='C8', label='Perturbed AMCs (NFW)')
+plt.loglog(Rlist_NFW/1e3, rho_R_NFW_masscut/(4*np.pi*Rlist_NFW**2),color='C8', linestyle='-.', label=r'Perturbed AMCs (NFW, $M_f > 1\% M_i$)')
+#plt.loglog(Rlist_PL_circ/1e3, rho_R_PL_circ)
+#plt.text(8.33, 0.2, "$r_\odot$", rotation = -90, color='gray')
+
+props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
+
+plt.xlim(0.08, 50.)
+plt.ylim(1e-4, 1e1)
+
+plt.xlabel('Galactocentric radius $r$ [kpc]')
+plt.ylabel(r'Density of AMCs $\rho(r)$ [$M_\odot$ pc$^{-3}$]')
+plt.legend(loc = 'lower left' , fontsize=12)
+
+plt.savefig('../../plots/DensityReconstruction.pdf', bbox_inches='tight')
+
+#------ Plot encounter rate as a function of R ----------------------------
+
+
+Rlist_PL, PDF_R_PL = np.loadtxt(root_dir + 'EncounterRate_PL.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+Rlist_NFW, PDF_R_NFW = np.loadtxt(root_dir + 'EncounterRate_NFW.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+
+Rlist_PL_circ, PDF_R_PL_circ = np.loadtxt(root_dir + 'EncounterRate_PL_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+Rlist_NFW_circ, PDF_R_NFW_circ = np.loadtxt(root_dir + 'EncounterRate_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+
+plt.figure(figsize=(7,5))
+
+#factor = 3600*24
+factor = 1
+
+plt.loglog(Rlist_PL/1e3, PDF_R_PL*1e3*factor, label='Power-law', color='C0')
+plt.semilogx(Rlist_PL_circ/1e3, PDF_R_PL_circ*1e3*factor, color='C0', linestyle='--')
+
+plt.semilogx(Rlist_NFW/1e3, PDF_R_NFW*1e3*factor,  label='NFW', color='C8')
+plt.semilogx(Rlist_NFW_circ/1e3, PDF_R_NFW_circ*1e3*factor, color='C8', linestyle='--')
+
+
+
+plt.semilogx([1e21, 1e21], 'k-', label = "Eccentric")
+plt.semilogx([1e21, 1e21], 'k--', label = "Circular")
+
+plt.axvline(x=8.33, color='gray', ls=':', zorder=0)
+plt.text(8.33, 1e-2, "$r_\odot$", rotation = -90, color='gray')
+
+props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
+
+Gamma_PL = np.trapz(PDF_R_PL, Rlist_PL)*3600*24
+Gamma_NFW = np.trapz(PDF_R_NFW, Rlist_NFW)*3600*24
+
+plt.text(0.35, 0.9, r"$\Gamma_\mathrm{NFW} = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma_NFW),bbox=props,transform=plt.gca().transAxes, fontsize=16, color='C8')
+plt.text(0.35, 0.82, r"$\Gamma_\mathrm{PL} = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma_PL),bbox=props, transform=plt.gca().transAxes, fontsize=16, color='C0')
+
+plt.xlim(0.08, 50.)
+#plt.ylim(1e-2,1e3)
+plt.yticks(np.geomspace(1e-7, 1, 8))
+plt.ylim(1e-7, 1)
+
+plt.xlabel('Galactocentric radius $r$ [kpc]')
+plt.ylabel('Encounter rate $\mathrm{d}\Gamma/\mathrm{d}r$ [kpc$^{-1}$ s$^{-1}$]')
+plt.legend(loc = 'upper left' , fontsize=15)
+
+plt.savefig('../../plots/EncounterRate_ecc_sec.pdf', bbox_inches='tight')
+
+plt.show()
