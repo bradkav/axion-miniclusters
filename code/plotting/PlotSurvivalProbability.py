@@ -6,7 +6,7 @@ import os
 rc('text', usetex=True)
 rc('font', size=18)
 
-root_dir = '../../data_ecc/'
+root_dir = '../../data/'
 
 #------ Plot survival probability (as a function of a) --------------------
 
@@ -66,7 +66,7 @@ plt.semilogx([1e21, 1e21], 'k--', label = "Circular")
 
 plt.axvline(x=8.33, color='gray', ls=':', zorder=0)
 plt.text(8.33, 0.7, "$r_\odot$", rotation = -90, color='gray')
-plt.text(0.4, 0.42, r"NFW, ecc., $M_f > 1\% M_i$", rotation = 50, color='C8', fontsize=12, ha='center', va='center')
+plt.text(2.1, 0.5, r"NFW, ecc., $M_f > 10\% \,M_i$", rotation = 65, color='C8', fontsize=12, ha='center', va='center')
 
 props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
 
@@ -96,7 +96,7 @@ plt.loglog(Rlist_PL_circ/1e3, rho_init_R_PL_circ/(4*np.pi*Rlist_PL_circ**2), 'k:
 plt.loglog(Rlist_PL/1e3, rho_init_R_PL/(4*np.pi*Rlist_PL**2),'k--' , label="Unperturbed AMCs")
 plt.loglog(Rlist_PL/1e3, rho_R_PL/(4*np.pi*Rlist_PL**2),color='C0' , label="Perturbed AMCs (PL)")
 plt.loglog(Rlist_NFW/1e3, rho_R_NFW/(4*np.pi*Rlist_NFW**2),color='C8', label='Perturbed AMCs (NFW)')
-plt.loglog(Rlist_NFW/1e3, rho_R_NFW_masscut/(4*np.pi*Rlist_NFW**2),color='C8', linestyle='-.', label=r'Perturbed AMCs (NFW, $M_f > 1\% M_i$)')
+plt.loglog(Rlist_NFW/1e3, rho_R_NFW_masscut/(4*np.pi*Rlist_NFW**2),color='C8', linestyle='-.', label=r'Perturbed AMCs (NFW, $M_f > 10\% M_i$)')
 #plt.loglog(Rlist_PL_circ/1e3, rho_R_PL_circ)
 #plt.text(8.33, 0.2, "$r_\odot$", rotation = -90, color='gray')
 

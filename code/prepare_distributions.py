@@ -14,6 +14,12 @@ import os
 import re
 import warnings
 
+sys.path.append("../")
+import dirs
+if not os.path.exists(dirs.data_dir + "distributions/"):
+    os.makedirs(dirs.data_dir + "distributions/")
+
+
 USING_MPI = False
 
 
@@ -85,12 +91,12 @@ if (CIRCULAR):
     circ_text = "_circ"
 
 #Dump all of the AMC_*.txt files in a single directory, and specify it here:
-MCdata_path = "/Users/bradkav/Projects/AMC_encounters/code/AMC_montecarlo_data/"
+#MCdata_path = "/Users/bradkav/Projects/AMC_encounters/code/AMC_montecarlo_data/"
 #MCdata_path = "/home/kavanagh/AMC/AMC_montecarlo_data/"
 #MCdata_path = "/Users/thomasedwards/Desktop/AMC_montecarlo_data/"
 
 #Where should the resulting tables be output to?
-output_dir = "../data_ecc/"
+#output_dir = "../data_ecc/"
 
 
 Nbins_mass   = 250
@@ -141,7 +147,7 @@ def main():
     a_grid = None
     if (MPI_rank == 0):
         # Gather the list of files to be used
-        ff1 = glob.glob(MCdata_path + 'AMC_logflat_*' + PROFILE + circ_text +  '.txt')
+        ff1 = glob.glob(dirs.montecarlo_dir + 'AMC_logflat_*' + PROFILE + circ_text +  '.txt')
         a_grid = np.zeros(len(ff1))
 
 
@@ -271,11 +277,11 @@ def main():
         # Save the outputs
         if not UNPERTURBED:
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
-            if not CIRCULAR: np.savetxt(output_dir +'SurvivalProbability_a_' + PROFILE + '.txt', np.column_stack([a_grid, psurv_a_list]),
+            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + '.txt', np.column_stack([a_grid, psurv_a_list]),
                               delimiter=', ', header="Columns: semi-major axis [pc], survival probability")
-            np.savetxt(output_dir +'SurvivalProbability_R_' + PROFILE + circ_text + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut]),
-                               delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 99% [Msun/pc^3]")                
-        
+            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut]),
+                               delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 90% [Msun/pc^3]")                
+    
     
     PDF_list = np.zeros_like(R_centres)
     if (USING_MPI):
@@ -324,7 +330,7 @@ def main():
         #if (UNPERTURBED):
             #_unperturbed.txt"
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
-        np.savetxt(output_dir +'EncounterRate_' + out_text, np.column_stack([R_centres, PDF_list]),
+        np.savetxt(dirs.data_dir +'EncounterRate_' + out_text, np.column_stack([R_centres, PDF_list]),
                               delimiter=', ', header="Columns: R orbit [pc], surv_prob, MC radial distrib (dGamma/dR [pc^-1 s^-1])")
 
 #------------------------------
@@ -344,7 +350,7 @@ def load_AMC_results(Rlist):
     print(R_vals)
     
     for i, Rkpc in enumerate(R_vals):
-        fname = MCdata_path + 'AMC_logflat_a=%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text)
+        fname = dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text)
         
         columns = (3,4) #FIXME: Need to edit this if I've removed delta from the output files...
         if (UNPERTURBED):
@@ -500,7 +506,7 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini):
         weights[i,:] = w*P
 
     weights_survived = weights*np.atleast_2d((mass >= 1e-25)).T
-    weights_masscut = weights*np.atleast_2d((mass >= 1e-2*mass_ini)).T
+    weights_masscut = weights*np.atleast_2d((mass >= 1e-1*mass_ini)).T
     
     return  weights, weights_survived, weights_masscut
     
@@ -533,7 +539,7 @@ def calculate_weights_circ(a_grid, a, e, mass, mass_ini):
         weights[i,:] = w*P
 
     weights_survived = weights*np.atleast_2d((mass >= 1e-25)).T
-    weights_masscut = weights*np.atleast_2d((mass >= 1e-2*mass_ini)).T
+    weights_masscut = weights*np.atleast_2d((mass >= 1e-1*mass_ini)).T
     
     return  weights, weights_survived, weights_masscut
 
@@ -597,7 +603,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
                 
                 dPdM /= np.trapz(dPdM, mass_centre)
                 
-                np.savetxt(output_dir + 'distributions/distribution_mass_%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text), np.column_stack([mass_centre, dPdM]),
+                np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text), np.column_stack([mass_centre, dPdM]),
                                                                 delimiter=', ', header="M_f [M_sun], P(M_f) [M_sun^-1]")
 
         # FIXME: Please stick to R for galactocentric radius and r for AMC radius for consistency
@@ -660,7 +666,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         else:
             outfile_text = '%.2f_%s%s'%(Rkpc, PROFILE, circ_text)
 
-        np.savetxt(output_dir + 'distributions/distribution_radius_' + outfile_text + '.txt', np.column_stack([rad_centre, dPdr, dPdr_corr]),
+        np.savetxt(dirs.data_dir + 'distributions/distribution_radius_' + outfile_text + '.txt', np.column_stack([rad_centre, dPdr, dPdr_corr]),
                                                             delimiter=', ', header="Columns: R_MC [pc], P(R_MC) [1/pc], Cross-section weighted P(R_MC) [1/pc]")
                                         
         return integrand    
