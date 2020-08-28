@@ -11,23 +11,31 @@ import AMC
 rc('text', usetex=True)
 rc('font', size=20)
 
-dE_PL, dM_PL = np.loadtxt("../../data/MassLoss_PL.txt", unpack=True)
-dE_NFW, dM_NFW = np.loadtxt("../../data/MassLoss_NFW.txt", unpack=True)
-
 #-------------------
 
 plt.figure(figsize=(7,5))
 
 plt.axhline(1, linestyle='--', color='k')
 
-#plt.loglog(de, dm, label='Power-law')
-plt.loglog(dE_PL, dM_PL, label = 'Power-law', color='C0')
-plt.loglog(dE_NFW, dM_NFW, label = 'NFW', color='C8')
+plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k-', label='$\Delta M/M$')
+plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k:', label='$f_\mathrm{ej}$')
+
+dE_PL, dM_PL = np.loadtxt("../../data/MassLoss_PL.txt", unpack=True)
+dE_NFW, dM_NFW = np.loadtxt("../../data/MassLoss_NFW.txt", unpack=True)
+
+plt.loglog(dE_PL, dM_PL, linestyle ='-', label = 'Power-law', color='C0')
+plt.loglog(dE_NFW, dM_NFW, linestyle = '-', label = 'NFW', color='C8')
+
+dE_PL, fej_PL = np.loadtxt("../../data/EnergyLoss_PL.txt", unpack=True)
+dE_NFW, fej_NFW = np.loadtxt("../../data/EnergyLoss_NFW.txt", unpack=True)
+
+plt.loglog(dE_PL, fej_PL, linestyle =':', color='C0')
+plt.loglog(dE_NFW, fej_NFW, linestyle = ':', color='C8')
 
 plt.xlabel(r"$\Delta E/E_\mathrm{bind}$")
-plt.ylabel(r"$\Delta M/M$")
+#plt.ylabel(r"$\Delta M/M$")
 
-plt.legend(loc=[0.02, 0.75])
+plt.legend(loc=[0.02, 0.55], fontsize=16)
 
 plt.ylim(1e-6, 2)
 plt.xlim(1e-5, 1e3)
@@ -56,9 +64,7 @@ for profile in ["PL", "NFW"]:
     #Perturbation which is 1 permille of the binding energy
     dE = 1e-3*mc.Ebind()
     #print(dE)
-    print(profile)
     for i in range(Npert):
-        print(i)
         Mlist[i] = mc.M
         Rlist[i] = mc.R
         Elist[i] = mc.Ebind()
