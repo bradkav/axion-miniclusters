@@ -18,24 +18,25 @@ plt.figure(figsize=(7,5))
 plt.axhline(1, linestyle='--', color='k')
 
 plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k-', label='$\Delta M/M$')
-plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k:', label='$f_\mathrm{ej}$')
+plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k--', label='$f_\mathrm{ej}$')
+plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k:', label='$E_i^\mathrm{unbound}/E_i$')
 
-dE_PL, dM_PL = np.loadtxt("../../data/MassLoss_PL.txt", unpack=True)
-dE_NFW, dM_NFW = np.loadtxt("../../data/MassLoss_NFW.txt", unpack=True)
+dE_PL, dM_PL, fej_PL, Eub_PL = np.loadtxt("../../data/Perturbations_PL.txt", unpack=True)
+dE_NFW, dM_NFW, fej_NFW, Eub_NFW = np.loadtxt("../../data/Perturbations_NFW.txt", unpack=True)
 
 plt.loglog(dE_PL, dM_PL, linestyle ='-', label = 'Power-law', color='C0')
 plt.loglog(dE_NFW, dM_NFW, linestyle = '-', label = 'NFW', color='C8')
 
-dE_PL, fej_PL = np.loadtxt("../../data/EnergyLoss_PL.txt", unpack=True)
-dE_NFW, fej_NFW = np.loadtxt("../../data/EnergyLoss_NFW.txt", unpack=True)
+plt.loglog(dE_PL, fej_PL, linestyle ='--', color='C0')
+plt.loglog(dE_NFW, fej_NFW, linestyle = '--', color='C8')
 
-plt.loglog(dE_PL, fej_PL, linestyle =':', color='C0')
-plt.loglog(dE_NFW, fej_NFW, linestyle = ':', color='C8')
+plt.loglog(dE_PL, Eub_PL, linestyle =':', color='C0')
+plt.loglog(dE_NFW, Eub_NFW, linestyle = ':', color='C8')
 
 plt.xlabel(r"$\Delta E/E_\mathrm{bind}$")
 #plt.ylabel(r"$\Delta M/M$")
 
-plt.legend(loc=[0.02, 0.55], fontsize=16)
+plt.legend(loc='lower right', fontsize=16)
 
 plt.ylim(1e-6, 2)
 plt.xlim(1e-5, 1e3)
@@ -60,6 +61,7 @@ for profile in ["PL", "NFW"]:
     Mlist = np.zeros(Npert)
     Rlist = np.zeros(Npert)
     Elist = np.zeros(Npert)
+    rholist = np.zeros(Npert)
 
     #Perturbation which is 1 permille of the binding energy
     dE = 1e-3*mc.Ebind()
@@ -68,6 +70,7 @@ for profile in ["PL", "NFW"]:
         Mlist[i] = mc.M
         Rlist[i] = mc.R
         Elist[i] = mc.Ebind()
+        rholist[i] = mc.rho_mean()
     
         if (mc.M > 1e-25):
             #Inject an energy dE into the minicluster
@@ -82,6 +85,7 @@ for profile in ["PL", "NFW"]:
     plt.semilogy(Mlist/Mlist[0], label=r'$M/M_i$', color='C1')
     plt.plot(Rlist/Rlist[0], label=r'$R/R_i$', color='C2')
     plt.plot(Elist/Elist[0], label=r'$E_\mathrm{bind}/E_{\mathrm{bind},i}$', color='C3')
+    plt.plot(rholist/rholist[0], label=r'$\bar{\rho}/\bar{\rho}_i$')
 
     plt.ylabel(r"$x/x_i$")
     plt.xlabel(r"Number of perturbations")

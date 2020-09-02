@@ -12,29 +12,31 @@ rho_eq = 1512.0 #Solar masses per pc^3
 
 #NFW properties
 c = 100.
-x_M_NFW,y_M_NFW = np.loadtxt(script_dir + "../data/MassLoss_NFW.txt", unpack=True)
+dE_NFW, dM_NFW, fej_NFW, fub_NFW = np.loadtxt(script_dir + "../data/Perturbations_NFW.txt", unpack=True)
 #dM_interp_NFW = interp1d(x_M_NFW, y_M_NFW, bounds_error=False,fill_value = 0.0)
 def dM_interp_NFW(x):
-    return np.interp(x, x_M_NFW, y_M_NFW, left=0.0, right=1.0)
+    return np.interp(x, dE_NFW, dM_NFW, left=0.0, right=1.0)
+    
+def fej_interp_NFW(x):
+    return np.interp(x, dE_NFW, fej_NFW, left=0.0, right=1.0)
+    
+def fub_interp_NFW(x):
+    return np.interp(x, dE_NFW, fub_NFW, left=0.0, right=1.0)
 
 def f_NFW(x):
     return np.log(1+x) - x/(1+x)
-
-x_E_NFW,y_E_NFW = np.loadtxt(script_dir + "../data/EnergyLoss_NFW.txt", unpack=True)
+    
+    
+dE_PL, dM_PL, fej_PL, fub_PL = np.loadtxt(script_dir + "../data/Perturbations_PL.txt", unpack=True)
 #dEloss_interp_NFW = interp1d(x_E_NFW, y_E_NFW, bounds_error=False,fill_value = 0.0)
-def dEloss_interp_NFW(x):
-    return np.interp(x, x_E_NFW, y_E_NFW, left=0.0, right=1.0)
-
-#dEloss_interp_PL = interp1d(x_E_NFW, 0.0*y_E_NFW, bounds_error=False,fill_value = 0.0)
-x_E_PL,y_E_PL = np.loadtxt(script_dir +"../data/EnergyLoss_PL.txt", unpack=True)
-def dEloss_interp_PL(x):
-    return np.interp(x, x_E_PL, y_E_PL, left=0.0, right=1.0)
-
-#PL properties
-x_M_PL,y_M_PL = np.loadtxt(script_dir +"../data/MassLoss_PL.txt", unpack=True)
-#dM_interp_PL = interp1d(x_M_PL, y_M_PL, bounds_error=False,fill_value = 0.0)
 def dM_interp_PL(x):
-    return np.interp(x, x_M_PL, y_M_PL, left=0.0, right=1.0)
+    return np.interp(x, dE_PL, dM_PL, left=0.0, right=1.0)
+    
+def fej_interp_PL(x):
+    return np.interp(x, dE_PL, fej_PL, left=0.0, right=1.0)
+    
+def fub_interp_PL(x):
+    return np.interp(x, dE_PL, fub_PL, left=0.0, right=1.0)
 
 
 #Initialise the interpolation between rho and delta
@@ -61,22 +63,24 @@ class AMC:
         self.profile = profile
         
         if (profile == "PL"):
-            self.k = 3/11 #Prefactor for R^2
-            self.alpha = 3/2 #Prefactor for E_bind
-            self.Sigma = 6/5 #Prefactor for velocity dispersion
+            self.alpha_sq = 3/11 #Prefactor for R^2
+            self.beta = 3/2 #Prefactor for E_bind
+            self.kappa = 1.73 #Prefactor for velocity dispersion
             self.R = (3*self.M/(4*np.pi*self.rho))**(1/3.)
-            self.dE_threshold = 1e-1
+            self.dE_threshold = 1e-4
             self.dM_interp = dM_interp_PL
-            self.dEloss_interp = dEloss_interp_PL
+            self.fej_interp = fej_interp_PL
+            self.fub_interp = fub_interp_PL
             
         elif (profile == "NFW"):
-            self.k = 0.133
-            self.alpha = 3.46
-            self.Sigma = 1.02
+            self.alpha_sq = 0.133 #Prefactor for R^2
+            self.beta = 3.47 #Prefactor for E_bind
+            self.kappa = 3.54 #Prefactor for velocity dispersion
             self.R = c*(self.M/(4*np.pi*self.rho*f_NFW(c)))**(1/3.)
             self.dE_threshold = 1e-4
             self.dM_interp = dM_interp_NFW
-            self.dEloss_interp = dEloss_interp_NFW
+            self.fej_interp = fej_interp_NFW
+            self.fub_interp = fub_interp_NFW
         
         else:
             raise ValueError("AMC profile parameter must be `PL' or `NFW'") 
@@ -85,16 +89,16 @@ class AMC:
     
         
     def Ebind(self):
-        return self.alpha*G_N*self.M**2/self.R
+        return self.beta*G_N*self.M**2/self.R
         
     def Ekinetic(self):
-        return 0.5*self.Sigma*self.Ebind()
+        return 0.5*self.kappa*G_N*self.M**2/self.R
     
     def Etotal(self):
-        return (0.5*self.Sigma - 1)*self.Ebind()
+        return (0.5*self.kappa/self.beta - 1)*self.Ebind()
     
     def Rrms2(self):
-        return self.k*self.R**2
+        return self.alpha_sq*self.R**2
         
     def rho_mean(self):
         return self.M/(4*np.pi*self.R**3/3)
@@ -113,7 +117,7 @@ class AMC:
             dE_remain = dE
         else:
             dM = self.dM_interp(dE_frac)*self.M
-            dE_remain = dE*(1 - self.dEloss_interp(dE_frac))
+            dE_remain = dE*(1 - self.fej_interp(dE_frac)) - self.fub_interp(dE_frac)*self.Etotal()
             #dE_remain = dE*(1 - dM/self.M)
         Mnew = self.M - dM
         
@@ -128,18 +132,17 @@ class AMC:
         #E_f = self.Etotal() + dE*(Mnew/self.M)
         E_f = self.Etotal() + dE_remain
         
-        #Rnew = self.R*(Mnew**2/(self.M**2 - (5/3)*(self.R/G_N)*dE*(Mnew/self.M)))
-        Rnew = (0.5*self.Sigma - 1)*self.alpha*G_N*Mnew**2/E_f
-            
-        #sigsq_new = (self.M/Mnew)*self.sigma_v()**2 - 2*dE/self.M
-        #print(np.sqrt(sigsq_new))
-        #self.R = G_N*Mnew/(2*sigsq_new)
-        self.R = Rnew
-            
-        #The minicluster has been disrupted if R < 0
-        if (self.R <= 0):
+        if (E_f >= -1e-30):
             self.disrupt()
         else:
+        
+            #Rnew = self.R*(Mnew**2/(self.M**2 - (5/3)*(self.R/G_N)*dE*(Mnew/self.M)))
+            Rnew = (0.5*self.kappa - self.beta)*G_N*Mnew**2/E_f
+            
+            #sigsq_new = (self.M/Mnew)*self.sigma_v()**2 - 2*dE/self.M
+            #print(np.sqrt(sigsq_new))
+            #self.R = G_N*Mnew/(2*sigsq_new)
+            self.R = Rnew
             self.M = Mnew
             self.rho = 3*self.M/(4*np.pi*self.R**3)
             #if (self.rho > 1e20):
