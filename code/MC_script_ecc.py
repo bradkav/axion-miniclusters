@@ -83,7 +83,8 @@ psi_list = np.random.uniform(-np.pi/2.,np.pi/2.,size = N_AMC) #FIXME: Should thi
 
 
 #for j in tqdm(range(N_AMC)):
-for j in range(N_AMC):    
+for j in range(N_AMC):
+    #print(j)
     # Initialise the AMC
     minicluster = AMC.AMC(M = M_list[j], delta = delta_list[j], profile=profile)
     #print(profile, minicluster.R, minicluster.k)
@@ -242,7 +243,7 @@ Ntotal_list = np.array(Ntotal_list)
 #print(Nenc_list)
 #print(M_list_final/M_list_initial)
 #print("p_surv = ", np.sum(M_list_final > 1e-29)/len(M_list_initial))
-#print("p_surv2 = ", np.sum(M_list_final/M_list_initial > 1e-2)/len(M_list_initial))
+#print("p_surv2 = ", np.sum(M_list_final/M_list_initial > 1e-1)/len(M_list_initial))
 # print(R_list_initial, R_list_final)
 
 # ecc_str = '_ecc'
