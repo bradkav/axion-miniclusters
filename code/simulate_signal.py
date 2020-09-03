@@ -18,6 +18,8 @@ import sys
 import os
 import re
 
+print(NE.__file__)
+
 ###
 ###  This code returns the simulated signal from axion MC - NS encounter
 ###
@@ -29,13 +31,18 @@ try:
     MPI_rank = comm.Get_rank()
     if (MPI_size > 1): USING_MPI = True
     
-except (ModuleNotFoundError, ImportError) as err:
+except ImportError as err:
     print("   mpi4py module not found: using a single process only...")
     USING_MPI = False
     MPI_size = 1
     MPI_rank = 0
 
 print(MPI_size, MPI_rank)
+
+#sys.path.append("../")
+import dirs
+if not os.path.exists(dirs.data_dir + "distributions/"):
+    os.makedirs(dirs.data_dir + "distributions/")
 
 
 # constants
@@ -107,22 +114,22 @@ PROFILE = args.profile
 
 #abs_path  = '/Users/visinelli/Dropbox/LucaVisinelliArticoli/Axion star radio detection/current/data/'
 plt_path = "../plots/"
-abs_path = "../data_ecc/"
+#abs_path = "../data_ecc/"
 
-dist_path = abs_path+"distributions/"
+dist_path = dirs.data_dir+"distributions/"
 
 #Load in survival probabilities
 #a_surv_file = abs_path+"SurvivalProbability_a_" + PROFILE + ".txt" #List of survival probabilities
-R_surv_file = abs_path+"SurvivalProbability_R_" + PROFILE + ".txt" #List of survival probabilities
+R_surv_file = dirs.data_dir+"SurvivalProbability_R_" + PROFILE + ".txt" #List of survival probabilities
 #a_list, psurv_a_list = np.loadtxt(a_surv_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 R_list, psurv_R_list = np.loadtxt(R_surv_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 
 
 #Load in encounter rates
 if (UNPERTURBED):
-    encounter_file =  abs_path+"EncounterRate_" + PROFILE + "_circ_unperturbed.txt" #List of encounter rates
+    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "_circ_unperturbed.txt" #List of encounter rates
 else:
-    encounter_file =  abs_path+"EncounterRate_" + PROFILE + ".txt" #List of encounter rates
+    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + ".txt" #List of encounter rates
 R_list, dGammadR_list = np.loadtxt(encounter_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 dGammadR_list *= f_AMC
 
@@ -186,9 +193,9 @@ else:
             #print(np.trapz(distRC, distRX))
             #dict_interp_rho[i] = interpolate.interp1d(distDX[distDY>0.0], distDY[distDY>0.0], bounds_error=False, fill_value=(0, 0)) # Density distribution dPdrho
         
-            if (PROFILE == "NFW"):
-                distMX, distMY = np.loadtxt(dist_path + 'distribution_mass_%.2f_%s.txt'%(R_kpc, PROFILE), delimiter =', ', unpack=True)
-                dict_interp_mass[i] = interpolate.interp1d(distMX, distMY, bounds_error=False, fill_value=0.0)
+            #if (PROFILE == "NFW"):
+            distMX, distMY = np.loadtxt(dist_path + 'distribution_mass_%.2f_%s.txt'%(R_kpc, PROFILE), delimiter =', ', unpack=True)
+            dict_interp_mass[i] = interpolate.interp1d(distMX, distMY, bounds_error=False, fill_value=0.0)
         
         except:
             print("Warning: File for radius %.2f does not exist" % R_kpc)
@@ -198,8 +205,8 @@ else:
             dict_interp_r_corr[i] = None
             #dict_interp_rho[i] = None
             
-            if (PROFILE == "NFW"):
-                dict_interp_mass[i] = None
+            #if (PROFILE == "NFW"):
+            dict_interp_mass[i] = None
             
             continue
         # Only interpolate for non-zeros
@@ -261,7 +268,7 @@ Signal_array = []
 Interactions = []
 
 #Ne = int(1e3)
-Ne = int(1e6)
+Ne = int(1e3)
 
 
 Prd   = np.random.lognormal(Pm, Ps, Ne) # Period of the NS in s^-1
@@ -301,8 +308,8 @@ for l, R in enumerate(tqdm(R_sample)):
         #interp_rho = dict_interp_rho[smallest]
         interp_r_corr = dict_interp_r_corr[smallest]
         
-        if (PROFILE == "NFW"):
-            interp_M = dict_interp_mass[smallest]
+        #if (PROFILE == "NFW"):
+        interp_M = dict_interp_mass[smallest]
 
         
     # radius in pc
@@ -331,7 +338,7 @@ for l, R in enumerate(tqdm(R_sample)):
     #CHECK
     #rho_min = 1e-6
     rho_max = 3*mmax/(4*np.pi*MC_r[l]**3)
-    if (UNPERTURBED or (PROFILE == "PL")):
+    if (UNPERTURBED):
         
         dPdM = lambda x: NE.HMF_sc(x, mmin, mmax, gg)/x
         #(M_f/rho)*P(M_f)
@@ -422,6 +429,7 @@ L0    = 2.0*np.sqrt(r_cut**2-b**2) # Transversed length of the NS in the AMC in 
 b2tot = np.append(b2tot, b**2)
 L0tot = np.append(L0tot, L0)
 
+print(NE.__file__)
 
 Tenc  = L0/ut # Duration of the encounter in s
 fa = 0.0755**2/ma
@@ -491,7 +499,7 @@ if (UNPERTURBED):
     pert_text = '_unperturbed'
 
 
-int_file = abs_path + 'Interaction_params_%s%s.txt'%(PROFILE, pert_text)
+int_file = dirs.data_dir + 'Interaction_params_%s%s.txt'%(PROFILE, pert_text)
 
 #tag = 1
 #while os.path.isfile(int_file):

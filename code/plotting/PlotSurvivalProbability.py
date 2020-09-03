@@ -45,28 +45,32 @@ plt.savefig('../../plots/SurvivalProbability_a.pdf', bbox_inches='tight')
 Rlist_PL, psurv_R_PL = np.loadtxt(root_dir + 'SurvivalProbability_R_PL.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 Rlist_NFW, psurv_R_NFW = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 density_NFW_init, density_NFW_final = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW.txt', delimiter =',', dtype='f8', usecols=(2,4), unpack=True)
+density_PL_init, density_PL_final = np.loadtxt(root_dir + 'SurvivalProbability_R_PL.txt', delimiter =',', dtype='f8', usecols=(2,4), unpack=True)
 psurv_R_NFW_masscut = density_NFW_final/density_NFW_init
+psurv_R_PL_masscut = density_PL_final/density_PL_init
 
 Rlist_PL_circ, psurv_R_PL_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_PL_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 Rlist_NFW_circ, psurv_R_NFW_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
-density_NFW_circ_init, density_NFW_circ_final = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(2,4), unpack=True)
-psurv_R_NFW_circ_masscut = density_NFW_circ_final/density_NFW_circ_init
+#density_NFW_circ_init, density_NFW_circ_final = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(2,4), unpack=True)
+#psurv_R_NFW_circ_masscut = density_NFW_circ_final/density_NFW_circ_init
 
 plt.figure(figsize=(7,5))
 plt.semilogx(Rlist_PL/1.e3, psurv_R_PL, color='C0', label='Power-law')
 plt.semilogx(Rlist_PL_circ/1e3, psurv_R_PL_circ, color='C0', linestyle='--')
+plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_PL_masscut, color='C0', linestyle='-.')
 
 plt.semilogx(Rlist_NFW/1e3, psurv_R_NFW, color='C8', label='NFW')
 plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_circ, color='C8', linestyle='--')
-plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_circ_masscut, color='C8', linestyle='-.')
+plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_masscut, color='C8', linestyle='-.')
 
 
 plt.semilogx([1e21, 1e21], 'k-', label = "Eccentric")
 plt.semilogx([1e21, 1e21], 'k--', label = "Circular")
+plt.semilogx([1e21, 1e21], 'k-.', label = r"Ecc., $M_f > 10\% \,M_i$")
 
 plt.axvline(x=8.33, color='gray', ls=':', zorder=0)
 plt.text(8.33, 0.7, "$r_\odot$", rotation = -90, color='gray')
-plt.text(2.1, 0.5, r"NFW, ecc., $M_f > 10\% \,M_i$", rotation = 65, color='C8', fontsize=12, ha='center', va='center')
+#plt.text(2.1, 0.5, r"NFW, ecc., $M_f > 10\% \,M_i$", rotation = 65, color='C8', fontsize=12, ha='center', va='center')
 
 props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
 

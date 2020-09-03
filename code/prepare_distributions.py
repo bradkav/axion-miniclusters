@@ -7,7 +7,13 @@ import AMC
 import NSencounter as NE
 import perturbations as PB
 import glob
-from tqdm import tqdm
+
+try:
+    from tqdm import tqdm
+except ImportError as err:
+    def tqdm(x):
+        return x
+        
 import argparse
 import sys
 import os
@@ -30,7 +36,7 @@ try:
     MPI_rank = comm.Get_rank()
     if (MPI_size > 1): USING_MPI = True
     
-except (ModuleNotFoundError, ImportError) as err:
+except ImportError as err:
     print("   mpi4py module not found: using a single process only...")
     USING_MPI = False
     MPI_size = 1
@@ -562,10 +568,10 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         #surv_prob   = np.append(surv_prob, psurv)
     
         # AMC Mass
-        if (PROFILE == "PL"):
-            mass_edges  = np.geomspace(mmin, mmax, num=Nbins_mass+1)
-        elif (PROFILE == "NFW"):
-            mass_edges = np.geomspace(1e-3*mmin, mmax, num=Nbins_mass+1)
+        #if (PROFILE == "PL"):
+        #    mass_edges  = np.geomspace(mmin, mmax, num=Nbins_mass+1)
+        #elif (PROFILE == "NFW"):
+        mass_edges = np.geomspace(1e-3*mmin, mmax, num=Nbins_mass+1)
         
         mass_centre = np.sqrt(mass_edges[1:] * mass_edges[:-1]) # Geometric Mean
     
@@ -581,29 +587,29 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         beta = mass/mass_ini
 
         #Need to generate P(M)
-        if (PROFILE == "PL"):
-            dPdM = dPdM_ini(mass_centre)
+        #if (PROFILE == "PL"):
+        #    dPdM = dPdM_ini(mass_centre)
                 
-        elif (PROFILE == "NFW"):
+        #elif (PROFILE == "NFW"):
             
-            if (UNPERTURBED):
-                #beta = np.ones_like(mass)
-                dPdM = dPdM_ini(mass_centre)
-            else:
+        if (UNPERTURBED):
+            #beta = np.ones_like(mass)
+            dPdM = dPdM_ini(mass_centre)
+        else:
                 # For M_f = beta M_i
                 #P(M_f) = int P(beta) P_i(M_f/beta) (1/beta) dbeta
             
-                dPdM = 0.0*mass_centre
-                for i, M in enumerate(mass_centre):
-                    Mi_temp = M/beta
-                    samp_list = (1/beta)*dPdM_ini(Mi_temp)*weights_R
-                    samp_list[Mi_temp < mmin] = 0
-                    samp_list[Mi_temp > mmax] = 0
-                    dPdM[i] = np.sum(samp_list)
+            dPdM = 0.0*mass_centre
+            for i, M in enumerate(mass_centre):
+                Mi_temp = M/beta
+                samp_list = (1/beta)*dPdM_ini(Mi_temp)*weights_R
+                samp_list[Mi_temp < mmin] = 0
+                samp_list[Mi_temp > mmax] = 0
+                dPdM[i] = np.sum(samp_list)
                 
-                dPdM /= np.trapz(dPdM, mass_centre)
+            dPdM /= np.trapz(dPdM, mass_centre)
                 
-                np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text), np.column_stack([mass_centre, dPdM]),
+            np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text), np.column_stack([mass_centre, dPdM]),
                                                                 delimiter=', ', header="M_f [M_sun], P(M_f) [M_sun^-1]")
 
         # FIXME: Please stick to R for galactocentric radius and r for AMC radius for consistency
