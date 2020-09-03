@@ -39,7 +39,6 @@ except ImportError as err:
 
 print(MPI_size, MPI_rank)
 
-#sys.path.append("../")
 import dirs
 if not os.path.exists(dirs.data_dir + "distributions/"):
     os.makedirs(dirs.data_dir + "distributions/")
@@ -428,8 +427,6 @@ b     = np.sqrt(np.random.uniform(0.0, r_cut**2, Ne))
 L0    = 2.0*np.sqrt(r_cut**2-b**2) # Transversed length of the NS in the AMC in pc
 b2tot = np.append(b2tot, b**2)
 L0tot = np.append(L0tot, L0)
-
-print(NE.__file__)
 
 Tenc  = L0/ut # Duration of the encounter in s
 fa = 0.0755**2/ma
