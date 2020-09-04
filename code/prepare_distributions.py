@@ -20,7 +20,7 @@ import os
 import re
 import warnings
 
-sys.path.append("../")
+#sys.path.append("../")
 import dirs
 if not os.path.exists(dirs.data_dir + "distributions/"):
     os.makedirs(dirs.data_dir + "distributions/")

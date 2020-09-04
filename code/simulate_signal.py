@@ -18,7 +18,7 @@ import sys
 import os
 import re
 
-print(NE.__file__)
+#print(NE.__file__)
 
 ###
 ###  This code returns the simulated signal from axion MC - NS encounter
@@ -160,7 +160,7 @@ dict_interp_mass = dict()
 # --------------------- First we prepare the sampling distributions and total interactions
 
 if (UNPERTURBED):
-    dist_r, dist_Pr, dist_Pr_sigu  = np.loadtxt(dist_path + 'distribution_radius_%s_unperturbed.txt'%(PROFILE,), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
+    dist_r, dist_Pr, dist_Pr_sigu  = np.loadtxt(dist_path + 'distribution_radius_%s_circ_unperturbed.txt'%(PROFILE,), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
     #dist_rho, dist_P_rho = np.loadtxt(dist_path + 'distribution_rho_%s_unperturbed.txt'%(PROFILE,), delimiter =', ', dtype='f8', usecols=(0,1), unpack=True)
     interp_r = interpolate.interp1d(dist_r, dist_Pr)
     interp_r_corr = interpolate.interp1d(dist_r, dist_Pr_sigu)
@@ -267,7 +267,7 @@ Signal_array = []
 Interactions = []
 
 #Ne = int(1e3)
-Ne = int(1e3)
+Ne = int(1e6)
 
 
 Prd   = np.random.lognormal(Pm, Ps, Ne) # Period of the NS in s^-1
