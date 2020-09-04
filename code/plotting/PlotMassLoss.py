@@ -85,7 +85,7 @@ for profile in ["PL", "NFW"]:
     plt.semilogy(Mlist/Mlist[0], label=r'$M/M_i$', color='C1')
     plt.plot(Rlist/Rlist[0], label=r'$R/R_i$', color='C2')
     plt.plot(Elist/Elist[0], label=r'$E_\mathrm{bind}/E_{\mathrm{bind},i}$', color='C3')
-    plt.plot(rholist/rholist[0], label=r'$\bar{\rho}/\bar{\rho}_i$')
+    #plt.plot(rholist/rholist[0], label=r'$\bar{\rho}/\bar{\rho}_i$')
 
     plt.ylabel(r"$x/x_i$")
     plt.xlabel(r"Number of perturbations")

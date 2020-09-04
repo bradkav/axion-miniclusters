@@ -65,11 +65,12 @@ plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_masscut, color='C8', linestyle='-.'
 
 
 plt.semilogx([1e21, 1e21], 'k-', label = "Eccentric")
-plt.semilogx([1e21, 1e21], 'k--', label = "Circular")
 plt.semilogx([1e21, 1e21], 'k-.', label = r"Ecc., $M_f > 10\% \,M_i$")
+plt.semilogx([1e21, 1e21], 'k--', label = "Circular")
+
 
 plt.axvline(x=8.33, color='gray', ls=':', zorder=0)
-plt.text(8.33, 0.7, "$r_\odot$", rotation = -90, color='gray')
+plt.text(8.33, 0.55, "$r_\odot$", rotation = -90, color='gray')
 #plt.text(2.1, 0.5, r"NFW, ecc., $M_f > 10\% \,M_i$", rotation = 65, color='C8', fontsize=12, ha='center', va='center')
 
 props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
