@@ -132,7 +132,7 @@ class AMC:
         #E_f = self.Etotal() + dE*(Mnew/self.M)
         E_f = self.Etotal() + dE_remain
         
-        if (E_f >= -1e-30):
+        if (E_f >= 0):
             self.disrupt()
         else:
         

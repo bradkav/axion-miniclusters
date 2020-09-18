@@ -149,7 +149,8 @@ def MPI_recv_chunks(source, tag):
     return data
 
 def main():
-
+    print("NEED TO FIX THE LOWER LIMIT OF MASSES AND CHECK RANGE OF RADII")
+    exit()
     a_grid = None
     if (MPI_rank == 0):
         # Gather the list of files to be used
@@ -571,6 +572,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         #if (PROFILE == "PL"):
         #    mass_edges  = np.geomspace(mmin, mmax, num=Nbins_mass+1)
         #elif (PROFILE == "NFW"):
+
         mass_edges = np.geomspace(1e-3*mmin, mmax, num=Nbins_mass+1)
         
         mass_centre = np.sqrt(mass_edges[1:] * mass_edges[:-1]) # Geometric Mean
@@ -648,7 +650,6 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
             sigma_u = np.sqrt(2)*PB.sigma(R)*(3.24078e-14) #pc/s
             M_NS = 1.4
             R_cut = G_N*M_NS/sigma_u**2
-            #print(R_cut)
             sigmau_corr = np.sqrt(8*np.pi)*sigma_u*ri**2*(1.+R_cut/ri)*np.minimum(x_cut**2, np.ones_like(ri))            
             dPdr_corr[ii] = np.sum(samp_list*sigmau_corr)
         

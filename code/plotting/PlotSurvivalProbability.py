@@ -149,6 +149,17 @@ props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
 Gamma_PL = np.trapz(PDF_R_PL, Rlist_PL)*3600*24
 Gamma_NFW = np.trapz(PDF_R_NFW, Rlist_NFW)*3600*24
 
+Rlist_PL_up, PDF_R_PL_up = np.loadtxt(root_dir + 'EncounterRate_PL_circ_unperturbed.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+Gamma_PL_up = np.trapz(PDF_R_PL_up, Rlist_PL_up)*3600*24
+Rlist_NFW_up, PDF_R_NFW_up = np.loadtxt(root_dir + 'EncounterRate_NFW_circ_unperturbed.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
+Gamma_NFW_up = np.trapz(PDF_R_NFW_up, Rlist_NFW_up)*3600*24
+
+print("Gamma_PL:", Gamma_PL)
+print("Gamma_PL (unperturbed):", Gamma_PL_up)
+print("Gamma_NFW:", Gamma_NFW)
+print("Gamma_NFW (unperturbed):", Gamma_NFW_up)
+
+
 plt.text(0.35, 0.9, r"$\Gamma_\mathrm{NFW} = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma_NFW),bbox=props,transform=plt.gca().transAxes, fontsize=16, color='C8')
 plt.text(0.35, 0.82, r"$\Gamma_\mathrm{PL} = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma_PL),bbox=props, transform=plt.gca().transAxes, fontsize=16, color='C0')
 
@@ -161,6 +172,12 @@ plt.xlabel('Galactocentric radius $r$ [kpc]')
 plt.ylabel('Encounter rate $\mathrm{d}\Gamma/\mathrm{d}r$ [kpc$^{-1}$ s$^{-1}$]')
 plt.legend(loc = 'upper left' , fontsize=15)
 
-plt.savefig('../../plots/EncounterRate_ecc_sec.pdf', bbox_inches='tight')
+plt.savefig('../../plots/EncounterRate.pdf', bbox_inches='tight')
+
+#------Plot also with linear x-scale
+plt.xscale('linear')
+plt.xlim(0, 30)
+plt.savefig('../../plots/EncounterRate_linear.pdf', bbox_inches='tight')
+
 
 plt.show()
