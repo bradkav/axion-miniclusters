@@ -28,6 +28,7 @@ def getOptions(args=sys.argv[1:]):
 options = getOptions(sys.argv[1:])
 
 SAVE_OUTPUT = True
+VERBOSE = False
 
 a0 = options.semi_major_axis*1e3           # semi-major axis, conversion to pc  
 N_AMC = options.AMC_number
@@ -84,6 +85,8 @@ psi_list = np.random.uniform(-np.pi/2.,np.pi/2.,size = N_AMC) #FIXME: Should thi
 
 #for j in tqdm(range(N_AMC)):
 for j in range(N_AMC):
+    if (VERBOSE):
+        print(j)
     #print(j)
     # Initialise the AMC
     minicluster = AMC.AMC(M = M_list[j], delta = delta_list[j], profile=profile)
@@ -242,8 +245,9 @@ Ntotal_list = np.array(Ntotal_list)
 #print(M_list_initial)
 #print(Nenc_list)
 #print(M_list_final/M_list_initial)
-#print("p_surv = ", np.sum(M_list_final > 1e-29)/len(M_list_initial))
-#print("p_surv2 = ", np.sum(M_list_final/M_list_initial > 1e-1)/len(M_list_initial))
+if (VERBOSE):
+    print("p_surv = ", np.sum(M_list_final > 1e-29)/len(M_list_initial))
+    print("p_surv (M_f > 10% M_i) = ", np.sum(M_list_final/M_list_initial > 1e-1)/len(M_list_initial))
 # print(R_list_initial, R_list_final)
 
 # ecc_str = '_ecc'

@@ -105,7 +105,7 @@ if (CIRCULAR):
 #output_dir = "../data_ecc/"
 
 
-Nbins_mass   = 250
+Nbins_mass   = 300
 Nbins_radius = 500 #Previously 500
 
 #How much smaller than the local DM density
@@ -149,8 +149,8 @@ def MPI_recv_chunks(source, tag):
     return data
 
 def main():
-    print("NEED TO FIX THE LOWER LIMIT OF MASSES AND CHECK RANGE OF RADII")
-    exit()
+    #print("NEED TO FIX THE LOWER LIMIT OF MASSES AND CHECK RANGE OF RADII")
+    #exit()
     a_grid = None
     if (MPI_rank == 0):
         # Gather the list of files to be used
@@ -573,7 +573,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         #    mass_edges  = np.geomspace(mmin, mmax, num=Nbins_mass+1)
         #elif (PROFILE == "NFW"):
 
-        mass_edges = np.geomspace(1e-3*mmin, mmax, num=Nbins_mass+1)
+        mass_edges = np.geomspace(1e-6*mmin, mmax, num=Nbins_mass+1)
         
         mass_centre = np.sqrt(mass_edges[1:] * mass_edges[:-1]) # Geometric Mean
     
