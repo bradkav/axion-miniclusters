@@ -3,7 +3,7 @@
 # Time should probably be about 60 hours
 
 #SBATCH -N 1 --ntasks-per-node=16  
-#SBATCH -t 20:00:00
+#SBATCH -t 24:00:00
 #SBATCH -p normal
 
 # #SBATCH -t 00:04:30
