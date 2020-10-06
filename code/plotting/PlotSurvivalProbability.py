@@ -25,7 +25,7 @@ plt.text(8.33, 0.2, "$r_\odot$", rotation = -90, color='gray')
 
 props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
 
-plt.xlim(0.08, 50.)
+plt.xlim(0.1, 50.)
 plt.ylim(0,1.1)
 
 plt.yticks(np.linspace(0, 1, 6))
@@ -75,7 +75,7 @@ plt.text(8.33, 0.55, "$r_\odot$", rotation = -90, color='gray')
 
 props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
 
-plt.xlim(0.08, 50.)
+plt.xlim(0.1, 50.)
 plt.ylim(0,1.1)
 
 plt.yticks(np.linspace(0, 1, 6))
@@ -83,7 +83,7 @@ plt.gca().tick_params(axis='x', pad=6)
 
 plt.xlabel('Galactocentric radius $r$ [kpc]')
 plt.ylabel('Survival Probability')
-plt.legend(loc = 'lower right' , fontsize=15)
+plt.legend(loc = 'lower right' , fontsize=12)
 
 plt.savefig('../../plots/SurvivalProbability_R.pdf', bbox_inches='tight')
 
@@ -93,26 +93,35 @@ plt.savefig('../../plots/SurvivalProbability_R.pdf', bbox_inches='tight')
 Rlist_PL_circ, rho_init_R_PL_circ, rho_R_PL_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_PL_circ.txt', delimiter =',', dtype='f8', usecols=(0,2,3), unpack=True)
 Rlist_PL, rho_init_R_PL, rho_R_PL = np.loadtxt(root_dir + 'SurvivalProbability_R_PL.txt', delimiter =',', dtype='f8', usecols=(0,2,3), unpack=True)
 Rlist_NFW, rho_init_R_NFW, rho_R_NFW, rho_R_NFW_masscut = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW.txt', delimiter =',', dtype='f8', usecols=(0,2,3, 4), unpack=True)
+Rlist_PL, rho_init_R_PL, rho_R_PL, rho_R_PL_masscut = np.loadtxt(root_dir + 'SurvivalProbability_R_PL.txt', delimiter =',', dtype='f8', usecols=(0,2,3, 4), unpack=True)
 #Rlist_NFW_circ, psurv_R_NFW_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 
 
 plt.figure(figsize=(7,5))
 plt.loglog(Rlist_PL_circ/1e3, rho_init_R_PL_circ/(4*np.pi*Rlist_PL_circ**2), 'k:', label="Galactic density profile")
 plt.loglog(Rlist_PL/1e3, rho_init_R_PL/(4*np.pi*Rlist_PL**2),'k--' , label="Unperturbed AMCs")
+#plt.loglog(Rlist_PL/1e3, rho_init_R_PL/(4*np.pi*Rlist_PL**2),'w--' , label=" ")
+
 plt.loglog(Rlist_PL/1e3, rho_R_PL/(4*np.pi*Rlist_PL**2),color='C0' , label="Perturbed AMCs (PL)")
 plt.loglog(Rlist_NFW/1e3, rho_R_NFW/(4*np.pi*Rlist_NFW**2),color='C8', label='Perturbed AMCs (NFW)')
-plt.loglog(Rlist_NFW/1e3, rho_R_NFW_masscut/(4*np.pi*Rlist_NFW**2),color='C8', linestyle='-.', label=r'Perturbed AMCs (NFW, $M_f > 10\% M_i$)')
+plt.loglog(Rlist_PL/1e3, rho_R_PL_masscut/(4*np.pi*Rlist_PL**2),color='C0', linestyle='-.')
+plt.loglog(Rlist_NFW/1e3, rho_R_NFW_masscut/(4*np.pi*Rlist_NFW**2),color='C8', linestyle='-.')
+
+plt.loglog(Rlist_PL/1e3, 1e30*rho_R_PL_masscut/(4*np.pi*Rlist_PL**2),color='k', linestyle='-.', label=r'Perturbed AMCs ($M_f > 10\% M_i$)')
+#plt.loglog(Rlist_NFW/1e3, 1e30*rho_R_NFW_masscut/(4*np.pi*Rlist_NFW**2),color='k', linestyle='-.', label=r'Perturbed AMCs ($M_f > 10\% M_i$)')
+
+
 #plt.loglog(Rlist_PL_circ/1e3, rho_R_PL_circ)
 #plt.text(8.33, 0.2, "$r_\odot$", rotation = -90, color='gray')
 
 props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)
 
-plt.xlim(0.08, 50.)
+plt.xlim(0.1, 50.)
 plt.ylim(1e-4, 1e1)
 
 plt.xlabel('Galactocentric radius $r$ [kpc]')
 plt.ylabel(r'Density of AMCs $\rho(r)$ [$M_\odot$ pc$^{-3}$]')
-plt.legend(loc = 'lower left' , fontsize=12)
+plt.legend(loc = 'lower left' , fontsize=12)#, ncol=2)
 
 plt.savefig('../../plots/DensityReconstruction.pdf', bbox_inches='tight')
 
@@ -163,7 +172,7 @@ print("Gamma_NFW (unperturbed):", Gamma_NFW_up)
 plt.text(0.35, 0.9, r"$\Gamma_\mathrm{NFW} = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma_NFW),bbox=props,transform=plt.gca().transAxes, fontsize=16, color='C8')
 plt.text(0.35, 0.82, r"$\Gamma_\mathrm{PL} = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma_PL),bbox=props, transform=plt.gca().transAxes, fontsize=16, color='C0')
 
-plt.xlim(0.08, 50.)
+plt.xlim(0.1, 50.)
 #plt.ylim(1e-2,1e3)
 plt.yticks(np.geomspace(1e-7, 1, 8))
 plt.ylim(1e-7, 1)
