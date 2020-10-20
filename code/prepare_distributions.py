@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import quad
 from scipy import interpolate
 import AMC
+import mass_function
 import NSencounter as NE
 import perturbations as PB
 import glob
@@ -48,31 +49,28 @@ print(MPI_size, MPI_rank)
 warnings.filterwarnings('error')
 
 
-def mass_avg(mn, mx, g):
-    t = (g-1)/(2-g)
-    return t*(mx**g*mn**2 - mx**2*mn**g)/(mx*mn**g-mn*mx**g) #FIXME: Was the final g supposed to be a gg?
-    # return t*(mx**g*mn**2 - mx**2*mn**g)/(mx*mn**g-mn*mx**gg) #FIXME: This is the old line
-
-#R_cut = 7.19e-8  #GM_NS/sigma^2 in pc
-#R_cut = 
-#print("NEED TO CALCULATE R_CUT!!!")
 
 #This mass corresponds roughly to an axion decay 
 #constant of 3e11 and a confinement scale of Lambda = 0.076
 in_maeV   = 20e-6        # axion mass in eV
-in_gg     = 1.7
+in_gg     = -0.7        
 
-mmin = PB.M_min(in_maeV)
-mmax = PB.M_max(in_maeV)
-#print(mmin, mmax)
-#quit()
-M_cut = 1e-25
+AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+#frac_temp = quad(lambda x: AMC_MF.dPdlogM(np.exp(x)), np.log(AMC_MF.mmin), np.log(AMC_MF.mmax))[0]
+#frac_1 = quad(lambda x: AMC_MF.dPdlogM(np.exp(x)), np.log(3e-16), np.log(AMC_MF.mmax))[0]
+
+#print("HERE")
+#print(frac_temp)
+#print(frac_1)
+
+M_cut = 1e-29
 
 #sigma_v = 290*(3.24078e-14) # 290 km/s in pc/s
 #print(PB.sigma(8e3))
 
+#print("What do we mean by f_AMC? Is it the fraction by mass? Or fraction by number? Or what?")
+#sys.exit()
 
-Mavg = mass_avg(mmin, mmax, in_gg)
 
 ######################
 ####   OPTIONS  ######
@@ -84,17 +82,26 @@ parser.add_argument('-profile','--profile', help='Density profile for AMCs - `NF
 parser.add_argument('-unperturbed', '--unperturbed', help='Calculate for unperturbed profiles?', type=bool, default=False)
 parser.add_argument('-max_rows', '--max_rows', help='Maximum number of rows to read from each file?', type = int, default=None)
 parser.add_argument("-circ", "--circular", dest="circular", action='store_true', help="Use the circular flag to force e = 0 for all orbits.")
+parser.add_argument("-AScut", "--AScut", dest="AScut", action = 'store_true', help="Include an axion star cut on the AMC properties.")
 parser.set_defaults(circular=False)
+parser.set_defaults(AScut=False)
 
 args = parser.parse_args()
 UNPERTURBED = args.unperturbed
 PROFILE = args.profile
 CIRCULAR = args.circular
+AS_CUT = args.AScut
 max_rows = args.max_rows
 
 circ_text = ""
 if (CIRCULAR):
     circ_text = "_circ"
+    
+cut_text = ""
+if (AS_CUT):
+    print("> Calculating with axion-star cut...")
+    cut_text = "_AScut"
+
 
 #Dump all of the AMC_*.txt files in a single directory, and specify it here:
 #MCdata_path = "/Users/bradkav/Projects/AMC_encounters/code/AMC_montecarlo_data/"
@@ -112,6 +119,12 @@ Nbins_radius = 500 #Previously 500
 #do we care about?
 k = 1e-1
 
+def r_AS(M_AMC):
+    m_22 = in_maeV/1e-22
+    return 1e3*(1.6/m_22)*(M_AMC/1e9)**(-1/3)
+    
+alpha_AS = r_AS(1.0)
+k_AMC = (3/(4*np.pi))**(1/3)
 
 def MPI_send_chunks(data, dest, tag):
     data_shape = data.shape
@@ -187,12 +200,13 @@ def main():
     
     mass_ini_all, mass_all, radius_all, e_all, a_all = load_AMC_results(a_grid)        
         
+        
     #----------------------------
     
     if (CIRCULAR):
-        AMC_weights, AMC_weights_surv, AMC_weights_masscut = calculate_weights_circ(a_grid, a_all, e_all, mass_all, mass_ini_all)
+        AMC_weights, AMC_weights_surv, AMC_weights_masscut, AMC_weights_AScut = calculate_weights_circ(a_grid, a_all, e_all, mass_all, mass_ini_all, radius_all)
     else:
-        AMC_weights, AMC_weights_surv, AMC_weights_masscut = calculate_weights(R_bin_edges, a_grid, a_all, e_all, mass_all, mass_ini_all) # Just pass the eccentricities and semi major axes
+        AMC_weights, AMC_weights_surv, AMC_weights_masscut, AMC_weights_AScut = calculate_weights(R_bin_edges, a_grid, a_all, e_all, mass_all, mass_ini_all, radius_all) # Just pass the eccentricities and semi major axes
 
     if (USING_MPI):
         comm.barrier()
@@ -254,6 +268,8 @@ def main():
         P_r_weights = np.sum(AMC_weights, axis=0) # Check if this should be a sum or integral
         P_r_weights_surv = np.sum(AMC_weights_surv, axis=0)
         P_r_weights_masscut = np.sum(AMC_weights_masscut, axis=0)
+        P_r_weights_AScut = np.sum(AMC_weights_AScut, axis=0)
+        
     
         """
         plt.figure()
@@ -286,8 +302,8 @@ def main():
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
             if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + '.txt', np.column_stack([a_grid, psurv_a_list]),
                               delimiter=', ', header="Columns: semi-major axis [pc], survival probability")
-            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut]),
-                               delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 90% [Msun/pc^3]")                
+            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut, P_r_weights_AScut]),
+                               delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 90% [Msun/pc^3], Surviving AMC density with R_AMC > R_AS [Msun/pc^3]")                
     
     
     PDF_list = np.zeros_like(R_centres)
@@ -308,6 +324,7 @@ def main():
             weights = AMC_weights
         else:
             weights = AMC_weights_surv
+            #weights = AMC_weights_AScut
         inds = weights[:,i] > 0
         #inds = np.arange(len(mass_ini_all))
         PDF_list[i] = calc_distributions(R, mass_ini_all[inds],
@@ -330,7 +347,8 @@ def main():
 
         # Save the outputs
         #if not UNPERTURBED:
-        out_text = PROFILE + circ_text
+        out_text = PROFILE + circ_text + cut_text
+        
         if (UNPERTURBED):
             out_text += "_unperturbed"
         out_text += ".txt"
@@ -472,7 +490,7 @@ def calculate_survivalprobability(a_grid, a_all, m_final):
     Nsurv_a = np.zeros(len(a_grid))
     for i in range(len(a_grid)):
         Nsamp_a[i] = np.sum(a_all == a_grid[i])
-        Nsurv_a[i] = np.sum((a_all == a_grid[i]) & (m_final >= 1e-25))
+        Nsurv_a[i] = np.sum((a_all == a_grid[i]) & (m_final >= M_cut))
         
     print(Nsamp_a)
     print(Nsurv_a)
@@ -480,7 +498,7 @@ def calculate_survivalprobability(a_grid, a_all, m_final):
 
 #---------------------------
 
-def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini):
+def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius):
     
     a_bin_edges = np.sqrt(a_grid[:-1]*a_grid[1:])
     a_bin_edges = np.append(a_grid[0]/1.5, a_bin_edges)
@@ -512,14 +530,22 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini):
         #P = 4*np.pi*a[i]**2*NE.rhoNFW(a[i])*correction/(P_samp_a[a_grid == a[i]]*N_samps)
         weights[i,:] = w*P
 
-    weights_survived = weights*np.atleast_2d((mass >= 1e-25)).T
+    weights_survived = weights*np.atleast_2d((mass >= M_cut)).T
     weights_masscut = weights*np.atleast_2d((mass >= 1e-1*mass_ini)).T
     
-    return  weights, weights_survived, weights_masscut
+    AS_mask = (r_AS(mass_ini) < radius) & (mass >= M_cut)
+    p_target = AMC_MF.dPdlogM(mass_ini)
+    p_sample = 1/(np.log(AMC_MF.mmax) - np.log(AMC_MF.mmin))
+    m_w = p_target/p_sample
+    #m_w = p_target/np.sum(p_target)
+    #BJK: Need to reweight by mass function...
+    weights_AScut = weights*np.atleast_2d(m_w*AS_mask).T
+    
+    return  weights, weights_survived, weights_masscut, weights_AScut
     
 #-----------------------------
 
-def calculate_weights_circ(a_grid, a, e, mass, mass_ini):
+def calculate_weights_circ(a_grid, a, e, mass, mass_ini, radius):
     
     a_bin_edges = np.sqrt(a_grid[:-1]*a_grid[1:])
     a_bin_edges = np.append(a_grid[0]/1.5, a_bin_edges)
@@ -545,10 +571,19 @@ def calculate_weights_circ(a_grid, a, e, mass, mass_ini):
         P = 4*np.pi*a[i]**2*NE.rhoNFW(a[i])*correction/(Nsamp_a[a_grid == a[i]])
         weights[i,:] = w*P
 
-    weights_survived = weights*np.atleast_2d((mass >= 1e-25)).T
+    weights_survived = weights*np.atleast_2d((mass >= M_cut)).T
     weights_masscut = weights*np.atleast_2d((mass >= 1e-1*mass_ini)).T
     
-    return  weights, weights_survived, weights_masscut
+    AS_mask = (r_AS(mass_ini) < radius) & (mass >= M_cut)
+    p_target = AMC_MF.dPdlogM(mass_ini)
+    p_sample = 1/(np.log(AMC_MF.mmax) - np.log(AMC_MF.mmin))
+    m_w = p_target/p_sample
+    #m_w = p_target/np.sum(p_target)
+    #BJK: Need to reweight by mass function...
+    weights_AScut = weights*np.atleast_2d(m_w*AS_mask).T
+    
+    
+    return  weights, weights_survived, weights_masscut, weights_AScut
 
 #------------------------------
 
@@ -560,6 +595,16 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
     rho_loc = NE.rhoNFW(R)
     rho_crit = rho_loc*k
     
+    """
+    plt.figure()
+    
+    plt.scatter(np.log10(mass), np.log10(radius), c=weights_R)
+    plt.colorbar()
+    #plt.xscale('log')
+    #plt.yscale('log')
+    plt.show()
+    """
+    
     total_weight = np.sum(weights_R)
     
     if (total_weight > 0):
@@ -569,11 +614,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         #surv_prob   = np.append(surv_prob, psurv)
     
         # AMC Mass
-        #if (PROFILE == "PL"):
-        #    mass_edges  = np.geomspace(mmin, mmax, num=Nbins_mass+1)
-        #elif (PROFILE == "NFW"):
-
-        mass_edges = np.geomspace(1e-6*mmin, mmax, num=Nbins_mass+1)
+        mass_edges = np.geomspace(1e-6*AMC_MF.mmin, AMC_MF.mmax, num=Nbins_mass+1)
         
         mass_centre = np.sqrt(mass_edges[1:] * mass_edges[:-1]) # Geometric Mean
     
@@ -584,7 +625,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         rho = NE.density(mass, radius) #NB: this is the average density
               
         def dPdM_ini(x):
-            return NE.HMF(x, mmin, mmax, in_gg)/x
+            return AMC_MF.dPdlogM(x)/x
 
         beta = mass/mass_ini
 
@@ -605,14 +646,28 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
             for i, M in enumerate(mass_centre):
                 Mi_temp = M/beta
                 samp_list = (1/beta)*dPdM_ini(Mi_temp)*weights_R
-                samp_list[Mi_temp < mmin] = 0
-                samp_list[Mi_temp > mmax] = 0
-                dPdM[i] = np.sum(samp_list)
+                #samp_list[Mi_temp < mmin] = 0
+                #samp_list[Mi_temp > mmax] = 0
+                
+                if not AS_CUT:
+                    dPdM[i] = np.sum(samp_list)
+                else:
+                    #Cut version
+                    mask = rho < (k_AMC/alpha_AS)**3*M**2/beta
+                    if (np.sum(mask) > 0):
+                        dPdM[i] = np.sum(samp_list[mask])
                 
             dPdM /= np.trapz(dPdM, mass_centre)
                 
-            np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text), np.column_stack([mass_centre, dPdM]),
+            np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s%s.txt'%(Rkpc, PROFILE, circ_text, cut_text), np.column_stack([mass_centre, dPdM]),
                                                                 delimiter=', ', header="M_f [M_sun], P(M_f) [M_sun^-1]")
+        """
+        plt.figure()
+        
+        plt.loglog(mass_centre, dPdM)
+        plt.loglog(mass_centre, dPdM_cut)
+        plt.show()
+        """
 
         # FIXME: Please stick to R for galactocentric radius and r for AMC radius for consistency
         # Obtain dP/dr (Probability distribution as a function of AMC radius at specific galactocentric radius)
@@ -638,24 +693,34 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
             Mf_temp = (4*np.pi/3)*rho*ri**3
             Mi_temp = Mf_temp/beta
                 
+            #mask = ri > alpha_AS*(Mf_temp/beta)**(-1/3)
+            #mask = np.ones(len(rho), dtype=int)
+                
             # Integrand = dP/dM dM/dr P(beta)/beta
             samp_list = dPdM_ini(Mi_temp)/beta*(3*Mf_temp/ri)*weights_R
-            samp_list[Mi_temp < mmin] = 0
-            samp_list[Mi_temp > mmax] = 0
-            
-            dPdr[ii] = np.sum(samp_list) 
-            
+
             #Velocity dispersion at galactocentric radius R
             #Factor of sqrt(2) because it's the relative velocity (difference between 2 MB distributions)
             sigma_u = np.sqrt(2)*PB.sigma(R)*(3.24078e-14) #pc/s
             M_NS = 1.4
             R_cut = G_N*M_NS/sigma_u**2
-            sigmau_corr = np.sqrt(8*np.pi)*sigma_u*ri**2*(1.+R_cut/ri)*np.minimum(x_cut**2, np.ones_like(ri))            
-            dPdr_corr[ii] = np.sum(samp_list*sigmau_corr)
-        
+            sigmau_corr = np.sqrt(8*np.pi)*sigma_u*ri**2*(1.+R_cut/ri)*np.minimum(x_cut**2, np.ones_like(ri))  
+
+            #samp_list[Mi_temp < mmin] = 0
+            #samp_list[Mi_temp > mmax] = 0
+            
+            if not AS_CUT:
+                dPdr[ii] = np.sum(samp_list)
+                dPdr_corr[ii] = np.sum(samp_list*sigmau_corr)
+                
+            else:
+                mask = ri > alpha_AS*(Mf_temp/beta)**(-1/3)
+                if (np.sum(mask) > 0):
+                    dPdr[ii] = np.sum(samp_list[mask])
+                    dPdr_corr[ii] = np.sum(samp_list[mask]*sigmau_corr[mask])
+                
         
         n_dist = NE.nNS_sph(R)   # NS distribution at R in pc^-3
-        Del = 1
         
         sigmau_avg = np.trapz(dPdr_corr, rad_centre)
         dPdr_corr = dPdr_corr/sigmau_avg
@@ -663,15 +728,15 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         dPdr = dPdr/np.trapz(dPdr, rad_centre)
         
         #dGamma/dr_GC
-        integrand = n_dist*sigmau_avg/Mavg#rho_NFW
+        integrand = n_dist*sigmau_avg/AMC_MF.mavg#rho_NFW
 
         #rho_NFW is now applied in calculate_weights
 
         outfile_text = ''
         if (UNPERTURBED):
-            outfile_text = PROFILE + circ_text + '_unperturbed'
+            outfile_text = PROFILE + circ_text + cut_text + '_unperturbed'
         else:
-            outfile_text = '%.2f_%s%s'%(Rkpc, PROFILE, circ_text)
+            outfile_text = '%.2f_%s%s%s'%(Rkpc, PROFILE, circ_text, cut_text)
 
         np.savetxt(dirs.data_dir + 'distributions/distribution_radius_' + outfile_text + '.txt', np.column_stack([rad_centre, dPdr, dPdr_corr]),
                                                             delimiter=', ', header="Columns: R_MC [pc], P(R_MC) [1/pc], Cross-section weighted P(R_MC) [1/pc]")

@@ -155,34 +155,12 @@ def rhoNFW(R):
     aa = R/rs
     return rho0/aa/(1+aa)**2
 
-## AMC distributions
 
-#HMF which is vectorised...
-def HMF(mass, mmin, mmax, gg):
-    # Halo Mass Function 
-    g1   = 1.-gg
-    ff = g1*mass**g1/(mmax**g1-mmin**g1)
-    ff[mass > mmax] = 0.
-    ff[mass < mmin] = 0.
-    return ff
-
-# FIXME: What is the different between there. Remove...
-
-@np.vectorize
-def HMF_sc(mass, mmin, mmax, gg):
-    # Halo Mass Function 
-    g1   = 1.-gg
-    ff = 0 # FIXME: Check whether changing this number affects anything
-    if mass < mmax and mass > mmin:
-        ff = g1*mass**g1/(mmax**g1-mmin**g1)
-    return ff
-
-
-def P_r_given_rho(R, rho, mmin, mmax, gg):
-    mass = 4.*np.pi*rho*R**3/3.
+#def P_r_given_rho(R, rho, mmin, mmax, gg):
+#    mass = 4.*np.pi*rho*R**3/3.
     # print('made it here', HMF_sc(mass, mmin, mmax, gg), mass, mmin, mmax, gg)
     # quit()
-    return 3.*mass/R*HMF_sc(mass, mmin, mmax, gg)/mass
+#    return 3.*mass/R*HMF_sc(mass, mmin, mmax, gg)/mass
 
 ##
 ## Cross-section

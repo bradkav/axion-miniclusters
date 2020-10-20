@@ -17,6 +17,7 @@ import argparse
 import sys
 import os
 import re
+import mass_function
 
 #print(NE.__file__)
 
@@ -68,14 +69,17 @@ f_AMC = 1.0 #Fraction of Dark Matter in the form of axion miniclusters
 
 #Velocity dispersion: PB.sigma(R)*(3.24078e-14)
 
-M_cut  = 1.0e-25
+M_cut  = 1.0e-29
 Phicut = 1.0e-3
 
 #R_cut  = 7.19e-8  # GM_NS/u_dispersion^2 in pc
 
-mmin = PB.M_min(maeV)
-mmax = PB.M_max(maeV)
-gg   = 1.7
+#This mass corresponds roughly to an axion decay 
+#constant of 3e11 and a confinement scale of Lambda = 0.076
+in_maeV   = 20e-6        # axion mass in eV
+in_gg     = -0.7        
+
+AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 
 ## Neutron Star characteristics
 MNS = 1.4     # MSun
@@ -95,10 +99,14 @@ Bs = 0.55 # B field Peak spread
 #alpEM  = 1/137.036      # Fine-structure constant
 #ga     = alpEM/(2.*np.pi*fa)*(2./3.)*(4. + 0.48)/1.48 # axion-photon coupling in GeV^-1
 
+Ne = int(1e5)
+
 parser = argparse.ArgumentParser(description='...')
 
 parser.add_argument('-profile','--profile', help='Density profile for AMCs - `NFW` or `PL`', type=str, default="PL")
 parser.add_argument('-unperturbed', '--unperturbed', help='Calculate for unperturbed profiles?', type=int, default=0)
+parser.add_argument("-AScut", "--AScut", dest="AScut", action = 'store_true', help="Include an axion star cut on the AMC properties.")
+parser.set_defaults(AScut=False)
 
 
 args = parser.parse_args()
@@ -108,6 +116,12 @@ else:
     UNPERTURBED = True
     
 PROFILE = args.profile
+
+AS_CUT = args.AScut
+cut_text = ""
+if (AS_CUT):
+    print("> Calculating with axion-star cut...")
+    cut_text = "_AScut"
 
 
 
@@ -126,9 +140,9 @@ R_list, psurv_R_list = np.loadtxt(R_surv_file, delimiter =',', dtype='f8', useco
 
 #Load in encounter rates
 if (UNPERTURBED):
-    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "_circ_unperturbed.txt" #List of encounter rates
+    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "_circ%s_unperturbed.txt"%(cut_text,) #List of encounter rates
 else:
-    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + ".txt" #List of encounter rates
+    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "%s.txt"%(cut_text,) #List of encounter rates
 R_list, dGammadR_list = np.loadtxt(encounter_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 dGammadR_list *= f_AMC
 
@@ -160,7 +174,7 @@ dict_interp_mass = dict()
 # --------------------- First we prepare the sampling distributions and total interactions
 
 if (UNPERTURBED):
-    dist_r, dist_Pr, dist_Pr_sigu  = np.loadtxt(dist_path + 'distribution_radius_%s_circ_unperturbed.txt'%(PROFILE,), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
+    dist_r, dist_Pr, dist_Pr_sigu  = np.loadtxt(dist_path + 'distribution_radius_%s_circ%s_unperturbed.txt'%(PROFILE,cut_text), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
     #dist_rho, dist_P_rho = np.loadtxt(dist_path + 'distribution_rho_%s_unperturbed.txt'%(PROFILE,), delimiter =', ', dtype='f8', usecols=(0,1), unpack=True)
     interp_r = interpolate.interp1d(dist_r, dist_Pr)
     interp_r_corr = interpolate.interp1d(dist_r, dist_Pr_sigu)
@@ -181,7 +195,7 @@ else:
         
         
         try:
-            distRX, distRY, distRC = np.loadtxt(dist_path + 'distribution_radius_%.2f_%s.txt'%(R_kpc, PROFILE), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
+            distRX, distRY, distRC = np.loadtxt(dist_path + 'distribution_radius_%.2f_%s%s.txt'%(R_kpc, PROFILE, cut_text), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
             #distDX, distDY = np.loadtxt(dist_path + 'distribution_rho_%.2f_%s.txt'%(R_kpc, PROFILE), delimiter =', ', dtype='f8', usecols=(0,1), unpack=True)
     
             #print("Here.")
@@ -193,7 +207,7 @@ else:
             #dict_interp_rho[i] = interpolate.interp1d(distDX[distDY>0.0], distDY[distDY>0.0], bounds_error=False, fill_value=(0, 0)) # Density distribution dPdrho
         
             #if (PROFILE == "NFW"):
-            distMX, distMY = np.loadtxt(dist_path + 'distribution_mass_%.2f_%s.txt'%(R_kpc, PROFILE), delimiter =', ', unpack=True)
+            distMX, distMY = np.loadtxt(dist_path + 'distribution_mass_%.2f_%s%s.txt'%(R_kpc, PROFILE, cut_text), delimiter =', ', unpack=True)
             dict_interp_mass[i] = interpolate.interp1d(distMX, distMY, bounds_error=False, fill_value=0.0)
         
         except:
@@ -266,8 +280,7 @@ time_array = np.linspace(0, Ntot*DelT, Ntot)
 Signal_array = []
 Interactions = []
 
-#Ne = int(1e3)
-Ne = int(1e6)
+
 
 
 Prd   = np.random.lognormal(Pm, Ps, Ne) # Period of the NS in s^-1
@@ -321,32 +334,20 @@ for l, R in enumerate(tqdm(R_sample)):
     #PR = dict_interp_r_corr[smallest](MC_r[l]) # dPdr at a given galactocentric radius R
     # BJK: Note that this is *NOT* dPdr, this is dP_enc/dr
     
-    # FIXME: distDY must be a mistake
-    
-    #BJK: this should be P(rho|r) = P(r|rho)P(rho)/P(r) = (3M/r) P(M) P(rho)/P(r)
-    #RhoChR = NE.P_r_given_rho(MCrad[l], distDX, mmin, mmax, gg)*distDY/PR
-    
-    #BJK: My version
-    # print(NE.P_r_given_rho(MCrad[l], distDX, mmin, mmax, gg), dict_interp_rho[smallst](distDX), dict_interp_rad[smallst](MCrad[l]))
-    # quit()
-    #P_rho_given_r = lambda rho: (4*np.pi*rho*MCrad[l]**2)*dict_interp_mass[smallst]((4*np.pi/3)*rho*MCrad[l]**3)/dict_interp_rad[smallst](MCrad[l])
-    
-    #P(rho|r) = (M/rho)*P(M)
-    #Mf = (4*np.pi/3)*MC_r[l]**3
     
     #CHECK
     #rho_min = 1e-6
-    rho_max = 3*mmax/(4*np.pi*MC_r[l]**3)
+    rho_max = 3*1e1*AMC_MF.mmax/(4*np.pi*MC_r[l]**3)
     if (UNPERTURBED):
         
-        dPdM = lambda x: NE.HMF_sc(x, mmin, mmax, gg)/x
+        dPdM = lambda x: AMC_MF.dPdlogM(x)/x
         #(M_f/rho)*P(M_f)
         P_rho_given_r = lambda rho: ((4*np.pi/3)*MC_r[l]**3)*dPdM((4*np.pi/3)*rho*MC_r[l]**3)
-        rho_min = 3*mmin/(4*np.pi*MC_r[l]**3)
+        rho_min = 3*AMC_MF.mmin/(4*np.pi*MC_r[l]**3)
         
     else:
         P_rho_given_r = lambda rho: ((4*np.pi/3)*MC_r[l]**3)*interp_M((4*np.pi/3)*rho*MC_r[l]**3)
-        rho_min = 3*(1e-3*mmin)/(4*np.pi*MC_r[l]**3)
+        rho_min = 3*(1e-6*AMC_MF.mmin)/(4*np.pi*MC_r[l]**3)
     #P_rho_given_r = lambda rho: NE.P_r_given_rho(MCrad[l], rho, mmin, mmax, gg)*dict_interp_rho[smallst](rho)/dict_interp_rad[smallst](MCrad[l])
 
     
@@ -496,7 +497,7 @@ if (UNPERTURBED):
     pert_text = '_unperturbed'
 
 
-int_file = dirs.data_dir + 'Interaction_params_%s%s.txt'%(PROFILE, pert_text)
+int_file = dirs.data_dir + 'Interaction_params_%s%s%s.txt'%(PROFILE, cut_text, pert_text)
 
 #tag = 1
 #while os.path.isfile(int_file):

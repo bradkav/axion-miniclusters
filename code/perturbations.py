@@ -1,110 +1,29 @@
 import numpy as np
 import MilkyWay as MW
+import mass_function
 G    = 4.32275e-3       # (km/s)^2 pc/Msun
 G_pc = G*1.05026504e-27 # (pc/s)^2 pc/Msun
 from scipy.interpolate import interp1d
 from scipy.integrate import quad
 
 
-#def SampleAMC(n_samples):
-    
-def P_delta(delta):
-    #The overdensity distribution df/d\[Delta] is defined
-    #in Eq. (S39) in https://arxiv.org/abs/1906.00967.
-    #Here, we've corrected a few small errors.
-    sigma = 0.448
-    n = 11.5
-    deltaG = 1.06
-    S = 4.7
-    d = 1.93
-    alpha = -0.21
-    deltaF = 3.4
-    A = 1/2.045304
-    
-    B1 = np.exp(-(np.abs(alpha)/np.sqrt(2))**d)
-    B2 = ((np.sqrt(2)/np.abs(alpha))**d*np.abs(alpha)*n/d)
-    C = np.abs(alpha)*((np.sqrt(2)/np.abs(alpha))**d*n/d + 1)
-    
-    Pdelta = np.zeros(delta.shape)
-    
-    x = np.log(delta/deltaG)
-    
-    mask1 = (x <= sigma*alpha)
-    mask2 = (x > sigma*alpha)
-    
-    Pdelta[mask1] = np.exp(-(np.abs(np.abs(x[mask1]))/(np.sqrt(2)*sigma))**d)
-    Pdelta[mask2] = B1*(C/B2 + x[mask2]/(sigma*B2))**-n
-    
-    return Pdelta*A/(1 + (delta/deltaF)**S)
-
-
-def M_min(m_a):
-    #Minimum AMC mass in Msun
-    #m_a - axion mass in eV
-
-    # MJeans is Eq.B18 in 1707.03310
-    MJeans = 5.1e-10*(m_a/1e-10)**(-3/2)
-
-    # M_min is Eq.23 in 1707.03310 at z=0
-    M_min = MJeans*(1.8/7.5)**2
-    return M_min
-    
-def M_max(m_a):
-    #Maximum AMC mass in Msun
-    #m_a - axion mass in eV  
-
-    # M0 is found in Eq.34 in 1808.01879 
-    M0 = 6.6e-12*(m_a/5e-5)**(-1/2)
-
-    # M_max is Eq.22 in 1707.03310 at z=0
-    return 4.9e6*M0
-
-def P_M(M, m_a = 2e-5, gamma=-3/2):
-    #Power law: dP/dM ~ M^-gamma
-    #M in Msun
-    #m_a is the axion mass in eV
-
-    norm = (1+gamma)/(M_max(m_a)**(1+gamma) - M_min(m_a)**(1+gamma))
-    return norm*M**(gamma)
-    
     
 def sample_AMCs_logflat(m_a = 2e-5, n_samples=1000):
         #First sample the masses                                                                                                                               
     #It turns out that in this case, we can do the inverse                                                                                                 
     #sampling analytically if we have a power law distribution                                                                                            
     #print(M_max(m_a))                                                                                                                                    
-    x_list = np.random.uniform(np.log(M_min(m_a)), np.log(M_max(m_a)), size = n_samples)
+    x_list = np.random.uniform(np.log(mass_function.calc_Mmin(m_a)), np.log(mass_function.calc_Mmax(m_a)), size = n_samples)
     #M1 = M_min(m_a)**(1+gamma)                                                                                                                           
     #M2 = M_max(m_a)**(1+gamma)                                                                                                                            
     #M_list = (x_list*(M2 - M1) + M1)**(1/(1+gamma))                                                                                                      
     M_list = np.exp(x_list)
     #Now sample delta                                                                                                                                      
 
-    delta_list = inverse_transform_sampling(P_delta, [0.1, 20], \
+    delta_list = inverse_transform_sampling(mass_function.P_delta, [0.1, 20], \
                        nbins=1000, n_samples=n_samples)
     return M_list, delta_list
     
-    
-
-def sample_AMCs(m_a = 2e-5, gamma = -3/2, n_samples=1000):
-    #First sample the masses                                                                                                                               
-    #It turns out that in this case, we can do the inverse                                                                                                 
-    #sampling analytically if we have a power law distribution                                                                                             
-
-    #print(M_max(m_a))                                                                                                                                     
-    x_list = np.random.uniform(0, 1, size = n_samples)
-    M1 = M_min(m_a)**(1+gamma)
-    M2 = M_max(m_a)**(1+gamma)
-    M_list = (x_list*(M2 - M1) + M1)**(1/(1+gamma))
-    #M_list = np.exp(x_list)                                                                                                                               
-
-    #Now sample delta                                                                                                                                      
-    delta_list = inverse_transform_sampling(P_delta, [0.1, 20], \
-                        nbins=1000, n_samples=n_samples)
-
-    return M_list, delta_list
-
-
 
 def inverse_transform_sampling(function, x_range, nbins=1000, n_samples=1000):
     bins = np.linspace(x_range[0], x_range[-1], num=nbins)
