@@ -89,6 +89,13 @@ Ps = 0.34 # Spread of period
 Bm = 12.65*np.log(10) # B field Peak peak
 Bs = 0.55 # B field Peak spread
 
+def r_AS(M_AMC):
+    m_22 = in_maeV/1e-22
+    return 1e3*(1.6/m_22)*(M_AMC/1e9)**(-1/3)
+
+alpha_AS = r_AS(1.0)
+k_AMC = (3/(4*np.pi))**(1/3)
+
 #TO BE DELETED:
 
 # dispersion of NS in the disc
@@ -99,7 +106,7 @@ Bs = 0.55 # B field Peak spread
 #alpEM  = 1/137.036      # Fine-structure constant
 #ga     = alpEM/(2.*np.pi*fa)*(2./3.)*(4. + 0.48)/1.48 # axion-photon coupling in GeV^-1
 
-Ne = int(1e5)
+Ne = int(1e6)
 
 parser = argparse.ArgumentParser(description='...')
 
@@ -338,16 +345,20 @@ for l, R in enumerate(tqdm(R_sample)):
     #CHECK
     #rho_min = 1e-6
     rho_max = 3*1e1*AMC_MF.mmax/(4*np.pi*MC_r[l]**3)
+    if (AS_CUT):
+        rho_min_AS = (alpha_AS*k_AMC/MC_r[l]**2)**3
+    else:
+        rho_min_AS = 1e-30
     if (UNPERTURBED):
         
         dPdM = lambda x: AMC_MF.dPdlogM(x)/x
         #(M_f/rho)*P(M_f)
         P_rho_given_r = lambda rho: ((4*np.pi/3)*MC_r[l]**3)*dPdM((4*np.pi/3)*rho*MC_r[l]**3)
-        rho_min = 3*AMC_MF.mmin/(4*np.pi*MC_r[l]**3)
+        rho_min = np.maximum(3*AMC_MF.mmin/(4*np.pi*MC_r[l]**3), rho_min_AS)
         
     else:
         P_rho_given_r = lambda rho: ((4*np.pi/3)*MC_r[l]**3)*interp_M((4*np.pi/3)*rho*MC_r[l]**3)
-        rho_min = 3*(1e-6*AMC_MF.mmin)/(4*np.pi*MC_r[l]**3)
+        rho_min = np.maximum(3*(1e-6*AMC_MF.mmin)/(4*np.pi*MC_r[l]**3), rho_min_AS)
     #P_rho_given_r = lambda rho: NE.P_r_given_rho(MCrad[l], rho, mmin, mmax, gg)*dict_interp_rho[smallst](rho)/dict_interp_rad[smallst](MCrad[l])
 
     

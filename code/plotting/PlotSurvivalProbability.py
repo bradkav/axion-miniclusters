@@ -41,9 +41,10 @@ plt.savefig('../../plots/SurvivalProbability_a.pdf', bbox_inches='tight')
 
 
 #------ Plot survival probability (as a function of R) --------------------
-frac_AScut_NFW = 0.0146342
-frac_AScut_PL = 0.000265
-
+#frac_AScut_NFW = 0.0146342
+frac_AScut_NFW = 0.0146239
+#frac_AScut_PL = 0.000265
+frac_AScut_PL = 0.0002719
 
 Rlist_PL, psurv_R_PL = np.loadtxt(root_dir + 'SurvivalProbability_R_PL.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 Rlist_NFW, psurv_R_NFW = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
@@ -52,8 +53,8 @@ density_PL_init, density_PL_final, density_PL_AScut = np.loadtxt(root_dir + 'Sur
 psurv_R_NFW_masscut = density_NFW_final/density_NFW_init
 psurv_R_PL_masscut = density_PL_final/density_PL_init
 
-psurv_R_NFW_AScut = density_NFW_AScut/(density_NFW_init*frac_AScut_NFW)
-psurv_R_PL_AScut = density_PL_AScut/(density_PL_init*frac_AScut_PL)
+psurv_R_NFW_AScut = np.clip(density_NFW_AScut/(density_NFW_init*frac_AScut_NFW), 0, 1)
+psurv_R_PL_AScut = np.clip(density_PL_AScut/(density_PL_init*frac_AScut_PL), 0, 1)
 
 Rlist_PL_circ, psurv_R_PL_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_PL_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 Rlist_NFW_circ, psurv_R_NFW_circ = np.loadtxt(root_dir + 'SurvivalProbability_R_NFW_circ.txt', delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
@@ -64,18 +65,18 @@ plt.figure(figsize=(7,5))
 plt.semilogx(Rlist_PL/1.e3, psurv_R_PL, color='C0', label='Power-law')
 plt.semilogx(Rlist_PL_circ/1e3, psurv_R_PL_circ, color='C0', linestyle='--')
 plt.semilogx(Rlist_PL_circ/1e3, psurv_R_PL_masscut, color='C0', linestyle='-.')
-#plt.semilogx(Rlist_PL_circ/1e3, psurv_R_PL_AScut, color='C0', linestyle=':')
+plt.semilogx(Rlist_PL_circ/1e3, psurv_R_PL_AScut, color='C0', linestyle=':')
 
 plt.semilogx(Rlist_NFW/1e3, psurv_R_NFW, color='C8', label='NFW')
 plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_circ, color='C8', linestyle='--')
 plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_masscut, color='C8', linestyle='-.')
-#plt.semilogx(Rlist_PL_circ/1e3, psurv_R_NFW_AScut, color='C8', linestyle=':')
+plt.semilogx(Rlist_PL_circ/1e3, psurv_R_NFW_AScut, color='C8', linestyle=':')
 
 
 plt.semilogx([1e21, 1e21], 'k-', label = "Eccentric")
 plt.semilogx([1e21, 1e21], 'k-.', label = r"Ecc., $M_f > 10\% \,M_i$")
 plt.semilogx([1e21, 1e21], 'k--', label = "Circular")
-#plt.semilogx([1e21, 1e21], 'k:', label = "Ecc., AS cut")
+plt.semilogx([1e21, 1e21], 'k:', label = "Ecc., AS cut")
 
 
 plt.axvline(x=8.33, color='gray', ls=':', zorder=0)
@@ -183,6 +184,8 @@ print("Gamma_PL (unperturbed):", Gamma_PL_up)
 print("Gamma_NFW:", Gamma_NFW)
 print("Gamma_NFW (unperturbed):", Gamma_NFW_up)
 
+if (AS_CUT):
+    plt.title("Including axion star cut")
 
 plt.text(0.35, 0.9, r"$\Gamma_\mathrm{NFW} = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma_NFW),bbox=props,transform=plt.gca().transAxes, fontsize=16, color='C8')
 plt.text(0.35, 0.82, r"$\Gamma_\mathrm{PL} = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma_PL),bbox=props, transform=plt.gca().transAxes, fontsize=16, color='C0')
