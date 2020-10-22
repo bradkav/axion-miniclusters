@@ -30,7 +30,8 @@ def density_contour(xdata, ydata, nbins_x, nbins_y, ax=None, uselog=False, **con
     one_sigma = so.brentq(find_confidence_interval, 0., 1., args=(pdf, 0.6827))
     two_sigma = so.brentq(find_confidence_interval, 0., 1., args=(pdf, 0.9545))
     three_sigma = so.brentq(find_confidence_interval, 0., 1., args=(pdf, 0.9973))
-    levels = np.sort(np.array([one_sigma, two_sigma, three_sigma]))
+    four_sigma = so.brentq(find_confidence_interval, 0., 1., args=(pdf, 0.9999366575))
+    levels = np.sort(np.array([one_sigma, two_sigma, three_sigma, four_sigma]))
 
     #print(levels)
     X, Y = 0.5*(xedges[1:]+xedges[:-1]), 0.5*(yedges[1:]+yedges[:-1])
