@@ -496,7 +496,7 @@ for k in tqdm(range(Ne)):
 
     #BJK: Added peak flux here
     mean_flux = np.trapz(Signal_interaction, tarray)/Tenc[k]
-    interaction_params = [s0[k], lG[k], bG[k], BW[k], Tenc[k], np.max(Signal_interaction), mean_flux, MC_rho[k], MC_r[k], R_sample[k]]
+    interaction_params = [s0[k], lG[k], bG[k], Tenc[k], mean_flux, MC_rho[k], MC_r[k]]
     Interactions.append(interaction_params)
 
 Interactions = np.array(Interactions)
@@ -509,7 +509,7 @@ if (UNPERTURBED):
     pert_text = '_unperturbed'
 
 
-int_file = dirs.data_dir + 'Interaction_params_%s%s%s.txt'%(PROFILE, cut_text, pert_text)
+int_file = dirs.data_dir + 'Interaction_params_%s%s%s.gz'%(PROFILE, cut_text, pert_text)
 
 #tag = 1
 #while os.path.isfile(int_file):
@@ -519,7 +519,7 @@ int_file = dirs.data_dir + 'Interaction_params_%s%s%s.txt'%(PROFILE, cut_text, p
 print("Outputting to file:", int_file)
 
 np.savetxt(int_file, Interactions,
-        header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], Bandwidth [Hz], Legnth of encounter [s], Peak Flux [muJy], Mean Flux [muJy], MC density [Msun/pc^3], MC radius [pc], galactocentric radius [pc]")
+        header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], Length of encounter [s], Peak Flux [muJy], Mean Flux [muJy], MC density [Msun/pc^3], MC radius [pc], galactocentric radius [pc]", fmt='%.5e')
 
 print("NB: Currently not printing signal arrays due to huge file length for long simulations (see also line 377...)")
 #np.savetxt(abs_path + 'time_array.txt', time_array, header="Times [s]")

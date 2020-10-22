@@ -204,9 +204,9 @@ def main():
     #----------------------------
     
     if (CIRCULAR):
-        AMC_weights, AMC_weights_surv, AMC_weights_masscut, AMC_weights_AScut = calculate_weights_circ(a_grid, a_all, e_all, mass_all, mass_ini_all, radius_all)
+        AMC_weights, AMC_weights_surv, AMC_weights_masscut, AMC_weights_AScut, AMC_weights_AScut_masscut = calculate_weights_circ(a_grid, a_all, e_all, mass_all, mass_ini_all, radius_all)
     else:
-        AMC_weights, AMC_weights_surv, AMC_weights_masscut, AMC_weights_AScut = calculate_weights(R_bin_edges, a_grid, a_all, e_all, mass_all, mass_ini_all, radius_all) # Just pass the eccentricities and semi major axes
+        AMC_weights, AMC_weights_surv, AMC_weights_masscut, AMC_weights_AScut, AMC_weights_AScut_masscut = calculate_weights(R_bin_edges, a_grid, a_all, e_all, mass_all, mass_ini_all, radius_all) # Just pass the eccentricities and semi major axes
 
     if (USING_MPI):
         comm.barrier()
@@ -263,12 +263,13 @@ def main():
     if (MPI_rank == 0):
         
         #Calculate the survival probability as a function of a
-        psurv_a_list = calculate_survivalprobability(a_grid, a_all, mass_all)
+        psurv_a_list,psurv_a_AScut_list = calculate_survivalprobability(a_grid, a_all, mass_all, mass_ini_all, radius_all)
     
         P_r_weights = np.sum(AMC_weights, axis=0) # Check if this should be a sum or integral
         P_r_weights_surv = np.sum(AMC_weights_surv, axis=0)
         P_r_weights_masscut = np.sum(AMC_weights_masscut, axis=0)
         P_r_weights_AScut = np.sum(AMC_weights_AScut, axis=0)
+        P_r_weights_AScut_masscut = np.sum(AMC_weights_AScut_masscut, axis=0)
         
     
         """
@@ -300,10 +301,10 @@ def main():
         # Save the outputs
         if not UNPERTURBED:
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
-            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + '.txt', np.column_stack([a_grid, psurv_a_list]),
-                              delimiter=', ', header="Columns: semi-major axis [pc], survival probability")
-            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut, P_r_weights_AScut]),
-                               delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 90% [Msun/pc^3], Surviving AMC density with R_AMC > R_AS [Msun/pc^3]")                
+            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + '.txt', np.column_stack([a_grid, psurv_a_list, psurv_a_AScut_list]),
+                              delimiter=', ', header="Columns: semi-major axis [pc], survival probability, survival probability for AMCs passing the AS cut")
+            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut, P_r_weights_AScut, P_r_weights_AScut_masscut]),
+                               delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 90% [Msun/pc^3], Surviving AMC density with R_AMC > R_AS [Msun/pc^3], Surviving AMC density with R_AMC > R_AS *AND* mass-loss < 90% [Msun/pc^3]")                
     
     
     PDF_list = np.zeros_like(R_centres)
@@ -483,7 +484,7 @@ def calc_P_R(R_bin_edges, a, e):
 
 #---------------------------
 
-def calculate_survivalprobability(a_grid, a_all, m_final):
+def calculate_survivalprobability(a_grid, a_all, m_final, m_ini, r_final):
 
     #Count number of (surviving) AMC samples for each value of a
     Nsamp_a = np.zeros(len(a_grid))
@@ -492,9 +493,19 @@ def calculate_survivalprobability(a_grid, a_all, m_final):
         Nsamp_a[i] = np.sum(a_all == a_grid[i])
         Nsurv_a[i] = np.sum((a_all == a_grid[i]) & (m_final >= M_cut))
         
-    print(Nsamp_a)
-    print(Nsurv_a)
-    return Nsurv_a/Nsamp_a
+    #print(Nsamp_a)
+    #print(Nsurv_a)
+    
+    psurv_a_AScut = np.zeros(len(a_grid))
+    for i in range(len(a_grid)):
+        inds = (a_all == a_grid[i])
+        AS_mask = (r_AS(m_ini[inds]) < r_final[inds]) & (m_final[inds] >= M_cut)
+        p_target = AMC_MF.dPdlogM(m_ini[inds])
+        p_sample = 1/(np.log(AMC_MF.mmax) - np.log(AMC_MF.mmin))
+        m_w = p_target/p_sample
+        psurv_a_AScut[i] = np.sum(m_w*AS_mask)/np.sum(inds)
+    
+    return Nsurv_a/Nsamp_a, psurv_a_AScut
 
 #---------------------------
 
@@ -540,8 +551,9 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius):
     #m_w = p_target/np.sum(p_target)
     #BJK: Need to reweight by mass function...
     weights_AScut = weights*np.atleast_2d(m_w*AS_mask).T
+    weights_AScut_masscut = weights_AScut*np.atleast_2d((mass >= 1e-1*mass_ini)).T
     
-    return  weights, weights_survived, weights_masscut, weights_AScut
+    return  weights, weights_survived, weights_masscut, weights_AScut, weights_AScut_masscut
     
 #-----------------------------
 
@@ -582,8 +594,9 @@ def calculate_weights_circ(a_grid, a, e, mass, mass_ini, radius):
     #BJK: Need to reweight by mass function...
     weights_AScut = weights*np.atleast_2d(m_w*AS_mask).T
     
+    weights_AScut_masscut = weights_AScut*np.atleast_2d((mass >= 1e-1*mass_ini)).T
     
-    return  weights, weights_survived, weights_masscut, weights_AScut
+    return  weights, weights_survived, weights_masscut, weights_AScut, weights_AScut_masscut
 
 #------------------------------
 
