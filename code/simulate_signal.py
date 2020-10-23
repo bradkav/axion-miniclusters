@@ -106,7 +106,7 @@ k_AMC = (3/(4*np.pi))**(1/3)
 #alpEM  = 1/137.036      # Fine-structure constant
 #ga     = alpEM/(2.*np.pi*fa)*(2./3.)*(4. + 0.48)/1.48 # axion-photon coupling in GeV^-1
 
-Ne = int(1e6)
+Ne = int(1e7)
 
 parser = argparse.ArgumentParser(description='...')
 
@@ -509,7 +509,7 @@ if (UNPERTURBED):
     pert_text = '_unperturbed'
 
 
-int_file = dirs.data_dir + 'Interaction_params_%s%s%s.gz'%(PROFILE, cut_text, pert_text)
+int_file = dirs.data_dir + 'Interaction_params_%s%s%s.txt.gz'%(PROFILE, cut_text, pert_text)
 
 #tag = 1
 #while os.path.isfile(int_file):
