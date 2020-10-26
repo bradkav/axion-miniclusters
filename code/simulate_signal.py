@@ -393,7 +393,7 @@ for l, R in enumerate(tqdm(R_sample)):
     #     quit()
 
 psi   = np.random.uniform(-np.pi,np.pi,Ne)  # Longitude
-xi    = np.arcsin(Z_gal/R_sample)              # Latitude
+xi    = np.arcsin(Z_gal/R_sample)           # Latitude
 # MCdis = 1.0*MCrad # Initial distance of the NS from the centre of the AMC in pc
 #MCvel = NE.Vcirc(MCorb)  # pc/s
 
@@ -405,7 +405,7 @@ y0    = R_sample*np.cos(xi)*np.sin(psi)
 
 s0    = np.sqrt((RSun + x0)**2 + y0**2 + z0**2) # Distance from events in pc
 bG    = np.arctan(z0/np.sqrt((RSun + x0)**2 + y0**2))*180.0/np.pi # Galactic Latitude
-lG    = np.arctan(y0/(RSun + x0))*180.0/np.pi # Galactic Longitude
+lG    = np.atan2(y0,(RSun + x0))*180.0/np.pi # Galactic Longitude
 
 #Relative velocity between NS & AMC
 vrel = np.sqrt(2)*PB.sigma(R_sample)*3.24078e-14
