@@ -53,8 +53,9 @@ warnings.filterwarnings('error')
 #This mass corresponds roughly to an axion decay 
 #constant of 3e11 and a confinement scale of Lambda = 0.076
 in_maeV   = 20e-6        # axion mass in eV
-in_gg     = -0.7        
+in_gg     = -0.5        
 
+print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
 AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 #frac_temp = quad(lambda x: AMC_MF.dPdlogM(np.exp(x)), np.log(AMC_MF.mmin), np.log(AMC_MF.mmax))[0]
 #frac_1 = quad(lambda x: AMC_MF.dPdlogM(np.exp(x)), np.log(3e-16), np.log(AMC_MF.mmax))[0]
@@ -102,6 +103,8 @@ if (AS_CUT):
     print("> Calculating with axion-star cut...")
     cut_text = "_AScut"
 
+
+IDtxt = "_gamma-0.5"
 
 #Dump all of the AMC_*.txt files in a single directory, and specify it here:
 #MCdata_path = "/Users/bradkav/Projects/AMC_encounters/code/AMC_montecarlo_data/"
@@ -301,9 +304,9 @@ def main():
         # Save the outputs
         if not UNPERTURBED:
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
-            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + '.txt', np.column_stack([a_grid, psurv_a_list, psurv_a_AScut_list]),
+            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + IDtxt +'.txt', np.column_stack([a_grid, psurv_a_list, psurv_a_AScut_list]),
                               delimiter=', ', header="Columns: semi-major axis [pc], survival probability, survival probability for AMCs passing the AS cut")
-            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut, P_r_weights_AScut, P_r_weights_AScut_masscut]),
+            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + IDtxt + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut, P_r_weights_AScut, P_r_weights_AScut_masscut]),
                                delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 90% [Msun/pc^3], Surviving AMC density with R_AMC > R_AS [Msun/pc^3], Surviving AMC density with R_AMC > R_AS *AND* mass-loss < 90% [Msun/pc^3]")                
     
     
@@ -352,7 +355,7 @@ def main():
         
         if (UNPERTURBED):
             out_text += "_unperturbed"
-        out_text += ".txt"
+        out_text +=  IDtxt + ".txt"
         #if (UNPERTURBED):
             #_unperturbed.txt"
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
@@ -672,7 +675,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
                 
             dPdM /= np.trapz(dPdM, mass_centre)
                 
-            np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s%s.txt'%(Rkpc, PROFILE, circ_text, cut_text), np.column_stack([mass_centre, dPdM]),
+            np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s%s%s.txt'%(Rkpc, PROFILE, circ_text, cut_text,IDtxt), np.column_stack([mass_centre, dPdM]),
                                                                 delimiter=', ', header="M_f [M_sun], P(M_f) [M_sun^-1]")
         """
         plt.figure()
@@ -751,7 +754,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         else:
             outfile_text = '%.2f_%s%s%s'%(Rkpc, PROFILE, circ_text, cut_text)
 
-        np.savetxt(dirs.data_dir + 'distributions/distribution_radius_' + outfile_text + '.txt', np.column_stack([rad_centre, dPdr, dPdr_corr]),
+        np.savetxt(dirs.data_dir + 'distributions/distribution_radius_' + outfile_text + IDtxt +  '.txt', np.column_stack([rad_centre, dPdr, dPdr_corr]),
                                                             delimiter=', ', header="Columns: R_MC [pc], P(R_MC) [1/pc], Cross-section weighted P(R_MC) [1/pc]")
                                         
         return integrand    

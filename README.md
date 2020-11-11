@@ -9,6 +9,12 @@ The key parts of the computation are:
 * Processing and calculation of the distributions of AMC properties from the Monte Carlo results ([`code/prepare_distributions.py`](code/prepare_distributions.py))  
 * Sampling of properties of individual encounters between AMCs and neutrons stars in the Milky Way ([`code/simulate_signal.py`](code/simulate_signal.py))
 
+#### To-do
+
+* Add link to signals - https://doi.org/10.6084/m9.figshare.13204856.v1  
+* Check .gitignore file
+
+
 #### Authors
 
 Written and maintained by Bradley J. Kavanagh, Thomas D. P. Edwards and Luca Visinelli.

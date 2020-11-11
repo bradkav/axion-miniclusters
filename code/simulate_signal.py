@@ -77,9 +77,12 @@ Phicut = 1.0e-3
 #This mass corresponds roughly to an axion decay 
 #constant of 3e11 and a confinement scale of Lambda = 0.076
 in_maeV   = 20e-6        # axion mass in eV
-in_gg     = -0.7        
+in_gg     = -0.5        
 
+print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
 AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+
+IDstr = "_gamma-0.5"
 
 ## Neutron Star characteristics
 MNS = 1.4     # MSun
@@ -106,14 +109,16 @@ k_AMC = (3/(4*np.pi))**(1/3)
 #alpEM  = 1/137.036      # Fine-structure constant
 #ga     = alpEM/(2.*np.pi*fa)*(2./3.)*(4. + 0.48)/1.48 # axion-photon coupling in GeV^-1
 
-Ne = int(1e7)
+
 
 parser = argparse.ArgumentParser(description='...')
 
 parser.add_argument('-profile','--profile', help='Density profile for AMCs - `NFW` or `PL`', type=str, default="PL")
 parser.add_argument('-unperturbed', '--unperturbed', help='Calculate for unperturbed profiles?', type=int, default=0)
 parser.add_argument("-AScut", "--AScut", dest="AScut", action = 'store_true', help="Include an axion star cut on the AMC properties.")
+parser.add_argument('-Ne', '--Ne', help="Number of signal events to simulate.", type=float, default=1e7)
 parser.set_defaults(AScut=False)
+
 
 
 args = parser.parse_args()
@@ -121,6 +126,8 @@ if (args.unperturbed <= 0):
     UNPERTURBED = False
 else: 
     UNPERTURBED = True
+    
+Ne = int(args.Ne)
     
 PROFILE = args.profile
 
@@ -140,16 +147,16 @@ dist_path = dirs.data_dir+"distributions/"
 
 #Load in survival probabilities
 #a_surv_file = abs_path+"SurvivalProbability_a_" + PROFILE + ".txt" #List of survival probabilities
-R_surv_file = dirs.data_dir+"SurvivalProbability_R_" + PROFILE + ".txt" #List of survival probabilities
+R_surv_file = dirs.data_dir+"SurvivalProbability_R_" + PROFILE + IDstr + ".txt" #List of survival probabilities
 #a_list, psurv_a_list = np.loadtxt(a_surv_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 R_list, psurv_R_list = np.loadtxt(R_surv_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 
 
 #Load in encounter rates
 if (UNPERTURBED):
-    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "_circ%s_unperturbed.txt"%(cut_text,) #List of encounter rates
+    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "_circ%s_unperturbed%s.txt"%(cut_text,IDstr) #List of encounter rates
 else:
-    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "%s.txt"%(cut_text,) #List of encounter rates
+    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "%s%s.txt"%(cut_text,IDstr) #List of encounter rates
 R_list, dGammadR_list = np.loadtxt(encounter_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 dGammadR_list *= f_AMC
 
@@ -181,7 +188,7 @@ dict_interp_mass = dict()
 # --------------------- First we prepare the sampling distributions and total interactions
 
 if (UNPERTURBED):
-    dist_r, dist_Pr, dist_Pr_sigu  = np.loadtxt(dist_path + 'distribution_radius_%s_circ%s_unperturbed.txt'%(PROFILE,cut_text), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
+    dist_r, dist_Pr, dist_Pr_sigu  = np.loadtxt(dist_path + 'distribution_radius_%s_circ%s_unperturbed%s.txt'%(PROFILE,cut_text, IDstr), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
     #dist_rho, dist_P_rho = np.loadtxt(dist_path + 'distribution_rho_%s_unperturbed.txt'%(PROFILE,), delimiter =', ', dtype='f8', usecols=(0,1), unpack=True)
     interp_r = interpolate.interp1d(dist_r, dist_Pr)
     interp_r_corr = interpolate.interp1d(dist_r, dist_Pr_sigu)
@@ -202,7 +209,7 @@ else:
         
         
         try:
-            distRX, distRY, distRC = np.loadtxt(dist_path + 'distribution_radius_%.2f_%s%s.txt'%(R_kpc, PROFILE, cut_text), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
+            distRX, distRY, distRC = np.loadtxt(dist_path + 'distribution_radius_%.2f_%s%s%s.txt'%(R_kpc, PROFILE, cut_text, IDstr), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
             #distDX, distDY = np.loadtxt(dist_path + 'distribution_rho_%.2f_%s.txt'%(R_kpc, PROFILE), delimiter =', ', dtype='f8', usecols=(0,1), unpack=True)
     
             #print("Here.")
@@ -214,7 +221,7 @@ else:
             #dict_interp_rho[i] = interpolate.interp1d(distDX[distDY>0.0], distDY[distDY>0.0], bounds_error=False, fill_value=(0, 0)) # Density distribution dPdrho
         
             #if (PROFILE == "NFW"):
-            distMX, distMY = np.loadtxt(dist_path + 'distribution_mass_%.2f_%s%s.txt'%(R_kpc, PROFILE, cut_text), delimiter =', ', unpack=True)
+            distMX, distMY = np.loadtxt(dist_path + 'distribution_mass_%.2f_%s%s%s.txt'%(R_kpc, PROFILE, cut_text, IDstr), delimiter =', ', unpack=True)
             dict_interp_mass[i] = interpolate.interp1d(distMX, distMY, bounds_error=False, fill_value=0.0)
         
         except:
@@ -405,7 +412,7 @@ y0    = R_sample*np.cos(xi)*np.sin(psi)
 
 s0    = np.sqrt((RSun + x0)**2 + y0**2 + z0**2) # Distance from events in pc
 bG    = np.arctan(z0/np.sqrt((RSun + x0)**2 + y0**2))*180.0/np.pi # Galactic Latitude
-lG    = np.atan2(y0,(RSun + x0))*180.0/np.pi # Galactic Longitude
+lG    = np.arctan2(y0,(RSun + x0))*180.0/np.pi # Galactic Longitude
 
 #Relative velocity between NS & AMC
 vrel = np.sqrt(2)*PB.sigma(R_sample)*3.24078e-14
@@ -509,7 +516,7 @@ if (UNPERTURBED):
     pert_text = '_unperturbed'
 
 
-int_file = dirs.data_dir + 'Interaction_params_%s%s%s.txt.gz'%(PROFILE, cut_text, pert_text)
+int_file = dirs.data_dir + 'Interaction_params_%s%s%s%s.txt.gz'%(PROFILE, cut_text, pert_text,IDstr)
 
 #tag = 1
 #while os.path.isfile(int_file):
@@ -519,7 +526,7 @@ int_file = dirs.data_dir + 'Interaction_params_%s%s%s.txt.gz'%(PROFILE, cut_text
 print("Outputting to file:", int_file)
 
 np.savetxt(int_file, Interactions,
-        header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], Length of encounter [s], Peak Flux [muJy], Mean Flux [muJy], MC density [Msun/pc^3], MC radius [pc], galactocentric radius [pc]", fmt='%.5e')
+        header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], Length of encounter [s], Mean Flux [muJy], MC density [Msun/pc^3], MC radius [pc]", fmt='%.5e')
 
 print("NB: Currently not printing signal arrays due to huge file length for long simulations (see also line 377...)")
 #np.savetxt(abs_path + 'time_array.txt', time_array, header="Times [s]")

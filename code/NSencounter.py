@@ -284,6 +284,7 @@ def signal_isotropic(Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, pro
     #What the hell is this?
     #vc    = 0.544467*np.sqrt(RNS/rcT_mean) # free-fall velocity at rc in units of c
     vc = np.sqrt(2*G_pc*MNS/rcT_mean)/(cs/pc) # free-fall velocity at *MEAN* rc in units of c
+    print(vc)
 
     BWD   = 1.0e3 + density*0.0 #Fix bandwidth to 1 kHz
     
@@ -297,7 +298,8 @@ def signal_isotropic(Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, pro
     #Correct angular dependence of B-field should be B^2(theta) ~ (3.*np.cos(theta)**2+1.)
     #See. Eq. 2 of https://arxiv.org/pdf/1811.01020.pdf. Taking the angular average we just
     #get a factor of 2: 0.5 int_{-1}^1 (3.*x**2+1.) dx = 2
-    Flux  = 2*np.pi/6.*ga**2*vc*(RNS/rcT_mean)**3*BGeV**2*(rho_rc*RNS**3/ma)
+    #Flux  = 2*np.pi/6.*ga**2*vc*(RNS/rcT_mean)**3*BGeV**2*(rho_rc*RNS**3/ma)
+    Flux  = 2*np.pi/6.*ga**2*(RNS/rcT_mean)**3*BGeV**2*(rho_rc*RNS**3/ma) #Corrected by a factor of 1/vc
     
     # 1.e32 is the conversion from SI to muJy. hbar converts from GeV to s^-1
     if ret_bandwidth:
