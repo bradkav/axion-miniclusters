@@ -26,10 +26,8 @@ import dirs
 if not os.path.exists(dirs.data_dir + "distributions/"):
     os.makedirs(dirs.data_dir + "distributions/")
 
-
+#The code in principle is parallelised, but I wouldn't recommend it...
 USING_MPI = False
-
-
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
@@ -57,21 +55,8 @@ in_gg     = -0.5
 
 print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
 AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
-#frac_temp = quad(lambda x: AMC_MF.dPdlogM(np.exp(x)), np.log(AMC_MF.mmin), np.log(AMC_MF.mmax))[0]
-#frac_1 = quad(lambda x: AMC_MF.dPdlogM(np.exp(x)), np.log(3e-16), np.log(AMC_MF.mmax))[0]
-
-#print("HERE")
-#print(frac_temp)
-#print(frac_1)
 
 M_cut = 1e-29
-
-#sigma_v = 290*(3.24078e-14) # 290 km/s in pc/s
-#print(PB.sigma(8e3))
-
-#print("What do we mean by f_AMC? Is it the fraction by mass? Or fraction by number? Or what?")
-#sys.exit()
-
 
 ######################
 ####   OPTIONS  ######
@@ -104,16 +89,7 @@ if (AS_CUT):
     cut_text = "_AScut"
 
 
-IDtxt = "_gamma-0.5"
-
-#Dump all of the AMC_*.txt files in a single directory, and specify it here:
-#MCdata_path = "/Users/bradkav/Projects/AMC_encounters/code/AMC_montecarlo_data/"
-#MCdata_path = "/home/kavanagh/AMC/AMC_montecarlo_data/"
-#MCdata_path = "/Users/thomasedwards/Desktop/AMC_montecarlo_data/"
-
-#Where should the resulting tables be output to?
-#output_dir = "../data_ecc/"
-
+IDtxt = ""
 
 Nbins_mass   = 300
 Nbins_radius = 500 #Previously 500
@@ -122,6 +98,7 @@ Nbins_radius = 500 #Previously 500
 #do we care about?
 k = 1e-1
 
+#Define AS cut
 def r_AS(M_AMC):
     m_22 = in_maeV/1e-22
     return 1e3*(1.6/m_22)*(M_AMC/1e9)**(-1/3)
@@ -129,6 +106,7 @@ def r_AS(M_AMC):
 alpha_AS = r_AS(1.0)
 k_AMC = (3/(4*np.pi))**(1/3)
 
+#Helper for MPI stuff
 def MPI_send_chunks(data, dest, tag):
     data_shape = data.shape
     comm.send(data_shape, dest, tag)
@@ -164,12 +142,12 @@ def MPI_recv_chunks(source, tag):
     
     return data
 
+
 def main():
-    #print("NEED TO FIX THE LOWER LIMIT OF MASSES AND CHECK RANGE OF RADII")
-    #exit()
+
     a_grid = None
     if (MPI_rank == 0):
-        # Gather the list of files to be used
+        # Gather the list of files to be used, then loop over semi-major axis a
         ff1 = glob.glob(dirs.montecarlo_dir + 'AMC_logflat_*' + PROFILE + circ_text +  '.txt')
         a_grid = np.zeros(len(ff1))
 
@@ -181,8 +159,6 @@ def main():
               a_string = m.group(1)
             a_grid[i]  = float(a_string)*1.e3       # conversion to pc
     
-        #a_grid = np.loadtxt("../data/Rvals.txt", usecols=(0,), unpack=True)
-        #a_grid = 1e3
         a_grid = np.sort(a_grid)
 
         print(len(a_grid))
@@ -197,15 +173,13 @@ def main():
     else:
         R_bin_edges = np.geomspace(0.05e3, 60e3, 65)        
         R_centres = np.sqrt(R_bin_edges[:-1]*R_bin_edges[1:])
-
-    #a_grid = a_grid[-20:]
-    # print(R_list)
     
     mass_ini_all, mass_all, radius_all, e_all, a_all = load_AMC_results(a_grid)        
         
         
     #----------------------------
     
+    #Re-weight the samples according to radius
     if (CIRCULAR):
         AMC_weights, AMC_weights_surv, AMC_weights_masscut, AMC_weights_AScut, AMC_weights_AScut_masscut = calculate_weights_circ(a_grid, a_all, e_all, mass_all, mass_ini_all, radius_all)
     else:
@@ -274,31 +248,6 @@ def main():
         P_r_weights_AScut = np.sum(AMC_weights_AScut, axis=0)
         P_r_weights_AScut_masscut = np.sum(AMC_weights_AScut_masscut, axis=0)
         
-    
-        """
-        plt.figure()
-        
-        dV = 4*np.pi*R_centres**2
-        plt.loglog(R_centres, P_r_weights/dV)
-        plt.plot(R_centres, P_r_weights_surv/dV)
-        plt.plot(R_centres, NE.rhoNFW(R_centres), linestyle='--')
-        
-        for a in a_grid:
-            plt.axvline(a, linestyle='--', color='grey', alpha=0.5)
-        
-        
-        plt.figure()
-        
-        plt.scatter(a_all, e_all)
-        plt.xscale('log')
-        
-        
-        
-        plt.show()
-        
-        quit()
-        """
-    
         psurv_R_list = P_r_weights_surv/(P_r_weights + 1e-30)
     
         # Save the outputs
@@ -331,6 +280,8 @@ def main():
             #weights = AMC_weights_AScut
         inds = weights[:,i] > 0
         #inds = np.arange(len(mass_ini_all))
+        
+        #Calculate distributions of R and M
         PDF_list[i] = calc_distributions(R, mass_ini_all[inds],
                                 mass_all[inds], radius_all[inds], weights[inds,i]) # just pass the AMC weight at that radius
 
@@ -473,16 +424,6 @@ def calc_P_R(R_bin_edges, a, e):
             #frac[i] = (term2 - term1)
             frac[i] = (term2 - term1)/(R_bin_edges[i+1] - R_bin_edges[i])
     
-    
-    #R_c = np.sqrt(R_bin_edges[1:]*R_bin_edges[:-1])
-    #inds = (r_min < R_c) & (R_c < r_max) 
-    #print(inds)
-    #frac[inds] = P_R(R_c[inds], a, e)
-    
-    #R_c = np.sqrt(R_bin_edges[:-1]*R_bin_edges[1:])
-    #norm = np.trapz(frac, R_c)
-    #print(norm)
-    
     return frac
 
 #---------------------------
@@ -611,16 +552,6 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
     rho_loc = NE.rhoNFW(R)
     rho_crit = rho_loc*k
     
-    """
-    plt.figure()
-    
-    plt.scatter(np.log10(mass), np.log10(radius), c=weights_R)
-    plt.colorbar()
-    #plt.xscale('log')
-    #plt.yscale('log')
-    plt.show()
-    """
-    
     total_weight = np.sum(weights_R)
     
     if (total_weight > 0):
@@ -644,19 +575,11 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
             return AMC_MF.dPdlogM(x)/x
 
         beta = mass/mass_ini
-
-        #Need to generate P(M)
-        #if (PROFILE == "PL"):
-        #    dPdM = dPdM_ini(mass_centre)
-                
-        #elif (PROFILE == "NFW"):
             
         if (UNPERTURBED):
             #beta = np.ones_like(mass)
             dPdM = dPdM_ini(mass_centre)
         else:
-                # For M_f = beta M_i
-                #P(M_f) = int P(beta) P_i(M_f/beta) (1/beta) dbeta
             
             dPdM = 0.0*mass_centre
             for i, M in enumerate(mass_centre):
@@ -677,21 +600,10 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
                 
             np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s%s%s.txt'%(Rkpc, PROFILE, circ_text, cut_text,IDtxt), np.column_stack([mass_centre, dPdM]),
                                                                 delimiter=', ', header="M_f [M_sun], P(M_f) [M_sun^-1]")
-        """
-        plt.figure()
-        
-        plt.loglog(mass_centre, dPdM)
-        plt.loglog(mass_centre, dPdM_cut)
-        plt.show()
-        """
 
-        # FIXME: Please stick to R for galactocentric radius and r for AMC radius for consistency
-        # Obtain dP/dr (Probability distribution as a function of AMC radius at specific galactocentric radius)
+
         dPdr  = np.zeros(len(rad_centre))
         dPdr_corr = np.zeros(len(rad_centre))
-        
-    
-        #x_cut = r_upper/ri
         
         #dP(interaction)/dr = int [dP/dMdr P(interaction|M, r)] dM
         if (PROFILE == "NFW"):
@@ -709,9 +621,6 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
             Mf_temp = (4*np.pi/3)*rho*ri**3
             Mi_temp = Mf_temp/beta
                 
-            #mask = ri > alpha_AS*(Mf_temp/beta)**(-1/3)
-            #mask = np.ones(len(rho), dtype=int)
-                
             # Integrand = dP/dM dM/dr P(beta)/beta
             samp_list = dPdM_ini(Mi_temp)/beta*(3*Mf_temp/ri)*weights_R
 
@@ -722,8 +631,6 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
             R_cut = G_N*M_NS/sigma_u**2
             sigmau_corr = np.sqrt(8*np.pi)*sigma_u*ri**2*(1.+R_cut/ri)*np.minimum(x_cut**2, np.ones_like(ri))  
 
-            #samp_list[Mi_temp < mmin] = 0
-            #samp_list[Mi_temp > mmax] = 0
             
             if not AS_CUT:
                 dPdr[ii] = np.sum(samp_list)

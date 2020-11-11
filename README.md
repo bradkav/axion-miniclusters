@@ -1,6 +1,6 @@
 # axion-miniclusters
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4006128.svg)](https://doi.org/10.5281/zenodo.4006128) [![LICENSE](https://img.shields.io/github/license/bradkav/axion-miniclusters)](https://github.com/bradkav/axion-miniclusters/blob/master/LICENSE) ![MINICLUSTER-BADGE](https://img.shields.io/badge/miniclusters-perturbed-blueviolet)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4006128.svg)](https://doi.org/10.5281/zenodo.4006128) ![GitHub](https://img.shields.io/github/license/bradkav/axion-miniclusters)
 
 Code and results for the disruption of axion miniclusters (AMCs) in the Milky Way, as well as radio signals from encounters between AMCs and neutrons stars.  
 The key parts of the computation are:
@@ -13,6 +13,7 @@ The key parts of the computation are:
 
 * Add link to signals - https://doi.org/10.6084/m9.figshare.13204856.v1  
 * Check .gitignore file
+* Add link to MC results - https://doi.org/10.6084/m9.figshare.13224386.v1
 
 
 #### Authors
