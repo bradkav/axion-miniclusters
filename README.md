@@ -10,11 +10,11 @@ The key parts of the computation are:
 * Processing and calculation of the distributions of AMC properties from the Monte Carlo results ([`code/prepare_distributions.py`](code/prepare_distributions.py))  
 * Sampling of properties of individual encounters between AMCs and neutrons stars in the Milky Way ([`code/simulate_signal.py`](code/simulate_signal.py))
 
-Scripts for generating plots from the results are in [`code/plotting/`](`code/plotting`). 
+Scripts for generating plots from the results are in [`code/plotting/`](code/plotting). The first thing to do is to edit [`code/dirs.py`](code/dirs.py) so that the directory variables point to the right place.
 
 The raw Monte Carlo results are archived online at https://doi.org/10.6084/m9.figshare.13224386.v1. Edit the file [`code/dirs.py`](code/dirs.py) to specify the directory where these Monte Carlo results are located (though the raw files are only needed if you want to re-calculate the AMC distributions).
 
-Full samples of radio signal events due to AMC-NS encounters are archived online at https://doi.org/10.6084/m9.figshare.13204856.v1. These should be placed in the [`data/`](data/) folder (and again [`code/dirs.py`](code/dirs.py) should be edited to point to the data folder). The full samples contain 10^7 events each; without these the plotting scripts will use instead the 'short' sample files provided, each of which is 10^5 events.
+Full samples of radio signal events due to AMC-NS encounters are archived online at https://doi.org/10.6084/m9.figshare.13204856.v1. These should be placed in the [`data/`](data/) folder. The full samples contain 10^7 events each; without these the plotting scripts will use instead the 'short' sample files provided, each of which is 10^5 events.
 
 ### Re-interpreting the results
 
