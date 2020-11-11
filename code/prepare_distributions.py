@@ -58,6 +58,8 @@ AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 
 M_cut = 1e-29
 
+IDstr = ""
+
 ######################
 ####   OPTIONS  ######
 
@@ -87,9 +89,6 @@ cut_text = ""
 if (AS_CUT):
     print("> Calculating with axion-star cut...")
     cut_text = "_AScut"
-
-
-IDtxt = ""
 
 Nbins_mass   = 300
 Nbins_radius = 500 #Previously 500
@@ -253,9 +252,9 @@ def main():
         # Save the outputs
         if not UNPERTURBED:
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
-            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + IDtxt +'.txt', np.column_stack([a_grid, psurv_a_list, psurv_a_AScut_list]),
+            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + IDstr +'.txt', np.column_stack([a_grid, psurv_a_list, psurv_a_AScut_list]),
                               delimiter=', ', header="Columns: semi-major axis [pc], survival probability, survival probability for AMCs passing the AS cut")
-            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + IDtxt + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut, P_r_weights_AScut, P_r_weights_AScut_masscut]),
+            np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + IDstr + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut, P_r_weights_AScut, P_r_weights_AScut_masscut]),
                                delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 90% [Msun/pc^3], Surviving AMC density with R_AMC > R_AS [Msun/pc^3], Surviving AMC density with R_AMC > R_AS *AND* mass-loss < 90% [Msun/pc^3]")                
     
     
@@ -306,7 +305,7 @@ def main():
         
         if (UNPERTURBED):
             out_text += "_unperturbed"
-        out_text +=  IDtxt + ".txt"
+        out_text +=  IDstr + ".txt"
         #if (UNPERTURBED):
             #_unperturbed.txt"
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
@@ -598,7 +597,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
                 
             dPdM /= np.trapz(dPdM, mass_centre)
                 
-            np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s%s%s.txt'%(Rkpc, PROFILE, circ_text, cut_text,IDtxt), np.column_stack([mass_centre, dPdM]),
+            np.savetxt(dirs.data_dir + 'distributions/distribution_mass_%.2f_%s%s%s%s.txt'%(Rkpc, PROFILE, circ_text, cut_text,IDstr), np.column_stack([mass_centre, dPdM]),
                                                                 delimiter=', ', header="M_f [M_sun], P(M_f) [M_sun^-1]")
 
 
@@ -661,7 +660,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         else:
             outfile_text = '%.2f_%s%s%s'%(Rkpc, PROFILE, circ_text, cut_text)
 
-        np.savetxt(dirs.data_dir + 'distributions/distribution_radius_' + outfile_text + IDtxt +  '.txt', np.column_stack([rad_centre, dPdr, dPdr_corr]),
+        np.savetxt(dirs.data_dir + 'distributions/distribution_radius_' + outfile_text + IDstr +  '.txt', np.column_stack([rad_centre, dPdr, dPdr_corr]),
                                                             delimiter=', ', header="Columns: R_MC [pc], P(R_MC) [1/pc], Cross-section weighted P(R_MC) [1/pc]")
                                         
         return integrand    
