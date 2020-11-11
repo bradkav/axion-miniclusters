@@ -8,12 +8,18 @@ rc('font', size=18)
 
 root_dir = '../../data/'
 
-#frac_AScut_NFW = 0.0146342
 frac_AScut_NFW = 0.0146239
-#frac_AScut_PL = 0.000265
 frac_AScut_PL = 0.0002719
 
-IDstr = "_gamma-0.5"
+#IDstr = "_gamma-0.5"
+IDstr = ""
+
+AS_CUT = True
+
+cut_text = ""
+if (AS_CUT):
+    print("> Calculating with axion-star cut...")
+    cut_text = "_AScut"
 
 #------ Plot survival probability (as a function of a) --------------------
 
@@ -85,8 +91,8 @@ plt.semilogx(Rlist_PL_circ/1e3, psurv_R_NFW_AScut, color='C8', linestyle='-', la
 #plt.semilogx(Rlist_NFW_circ/1e3, psurv_R_NFW_AScut_masscut, color='C8', linestyle=':')
 
 
-print("p_surv (PL):", np.interp(8.3, Rlist_PL_circ/1e3, psurv_R_PL_AScut))
-print("p_surv (NFW):", np.interp(8.3, Rlist_PL_circ/1e3, psurv_R_NFW_AScut))
+print("p_surv at r_Sun (PL):", np.interp(8.3, Rlist_PL_circ/1e3, psurv_R_PL_AScut))
+print("p_surv at r_Sun (NFW):", np.interp(8.3, Rlist_PL_circ/1e3, psurv_R_NFW_AScut))
 
 
 plt.semilogx([1e21, 1e21], 'k:', label = "Circular")
@@ -160,12 +166,7 @@ plt.savefig('../../plots/DensityReconstruction' + IDstr + '.pdf', bbox_inches='t
 
 #------ Plot encounter rate as a function of R ----------------------------
 
-AS_CUT = True
 
-cut_text = ""
-if (AS_CUT):
-    print("> Calculating with axion-star cut...")
-    cut_text = "_AScut"
 
 Rlist_PL, PDF_R_PL = np.loadtxt(root_dir + 'EncounterRate_PL%s%s.txt'%(cut_text,IDstr), delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 Rlist_NFW, PDF_R_NFW = np.loadtxt(root_dir + 'EncounterRate_NFW%s%s.txt'%(cut_text,IDstr), delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
