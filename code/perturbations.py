@@ -6,6 +6,7 @@ G_pc = G*1.05026504e-27 # (pc/s)^2 pc/Msun
 from scipy.interpolate import interp1d
 from scipy.integrate import quad
 
+import dirs
 
 #Sample logflat masses for the AMCs
 def sample_AMCs_logflat(m_a = 2e-5, n_samples=1000):
@@ -160,7 +161,7 @@ def Ntotal_ecc(Tage, bmax, orb, psi, b0=0.0):
     return N_orb*(Tage/orb.T_orb)
 
 def sample_ecc(N):
-    elist_loaded, P_e_loaded = np.loadtxt('eccentricity.txt', unpack=True, delimiter=',')
+    elist_loaded, P_e_loaded = np.loadtxt(dirs.data_dir + 'eccentricity.txt', unpack=True, delimiter=',')
     P_e = interp1d(elist_loaded, P_e_loaded, bounds_error=False, fill_value = 0.0)
     erange = np.linspace(0,1,100)
     return inverse_transform_sampling(P_e, erange, n_samples=N)
