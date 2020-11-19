@@ -1,3 +1,0 @@
-#### Data
-
-Full signal simulations (10^6 samples) are available at...
