@@ -15,18 +15,19 @@ rank = comm.Get_rank()
 myDir = "/home/kavanagh/AMC/code/"
 cmd = "cd "+myDir+" ; python3 simulate_signal.py"
 
-if (rank == 0):
+if (rank in [0,4]):
     cmd += " -profile PL -unperturbed 0"
-if (rank == 1):
+if (rank in [1,5]):
     cmd += " -profile PL -unperturbed 1"
-if (rank == 2):
+if (rank in [2,6]):
     cmd += " -profile NFW -unperturbed 0"
-if (rank == 3):
+if (rank in [3,7]):
     cmd += " -profile NFW -unperturbed 1"
 
-cmd += " -AScut"
+if (rank in [4,5,6,7]):
+    cmd += " -AScut"
     
-if (rank in [0, 1, 2, 3]):
+if (rank in [0, 1, 2, 3, 4, 5, 6, 7]):
     sts = call(cmd,shell=True)
     
 comm.Barrier()

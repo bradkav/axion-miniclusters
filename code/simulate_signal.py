@@ -405,7 +405,7 @@ y0    = R_sample*np.cos(xi)*np.sin(psi)
 
 s0    = np.sqrt((RSun + x0)**2 + y0**2 + z0**2) # Distance from events in pc
 bG    = np.arctan(z0/np.sqrt((RSun + x0)**2 + y0**2))*180.0/np.pi # Galactic Latitude
-lG    = np.atan2(y0,(RSun + x0))*180.0/np.pi # Galactic Longitude
+lG    = np.arctan2(y0,(RSun + x0))*180.0/np.pi # Galactic Longitude
 
 #Relative velocity between NS & AMC
 vrel = np.sqrt(2)*PB.sigma(R_sample)*3.24078e-14
@@ -519,7 +519,7 @@ int_file = dirs.data_dir + 'Interaction_params_%s%s%s.txt.gz'%(PROFILE, cut_text
 print("Outputting to file:", int_file)
 
 np.savetxt(int_file, Interactions,
-        header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], Length of encounter [s], Peak Flux [muJy], Mean Flux [muJy], MC density [Msun/pc^3], MC radius [pc], galactocentric radius [pc]", fmt='%.5e')
+        header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], Length of encounter [s], Mean Flux [muJy], MC density [Msun/pc^3], MC radius [pc]", fmt='%.5e')
 
 print("NB: Currently not printing signal arrays due to huge file length for long simulations (see also line 377...)")
 #np.savetxt(abs_path + 'time_array.txt', time_array, header="Times [s]")
