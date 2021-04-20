@@ -11,8 +11,15 @@ root_dir = '../../data/'
 frac_AScut_NFW = 0.0146239
 frac_AScut_PL = 0.0002719
 
-#IDstr = "_gamma-0.5"
-IDstr = ""
+IDstr = "_gamma-0.5"
+#IDstr = ""
+
+if (IDstr ==  "_gamma-0.5"):
+    frac_AScut_NFW = 0.0463458
+    frac_AScut_PL = 0.002647
+else:
+    frac_AScut_NFW = 0.0146239
+    frac_AScut_PL = 0.0002719
 
 AS_CUT = True
 

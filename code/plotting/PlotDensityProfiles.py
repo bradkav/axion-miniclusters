@@ -36,7 +36,7 @@ plt.figure(figsize=(7,5))
 R_list = np.geomspace(1e-7, 1e0, 1000)
 
 M0 = 1e-10
-rho0 = 10
+rho0 = 1e6
 
 Rmax_PL = R_PL(M0, rho0)
 Rmax_NFW = R_NFW(M0, rho0) 
@@ -55,12 +55,12 @@ plt.ylabel(r"$\rho_\mathrm{int}(R) \,[M_\odot \,\mathrm{pc}^{-3}]$")
 
 plt.legend(loc='upper right')
 
-plt.ylim(1e-7, 1e8)
-plt.xlim(1e-7, 1e-2)
+plt.ylim(1e-2, 1e10)
+plt.xlim(1e-7, 1e-3)
 
-plt.text(0.68, 0.75, "$M_\\mathrm{AMC} = 10^{-10}\\,M_\\odot$\n$\\rho_\\mathrm{AMC} = 10 \\,M_\\odot\\,\\mathrm{pc}^{-3}$", transform=plt.gca().transAxes, ha='left', va = 'top', fontsize=14)
+plt.text(0.68, 0.75, "$M_\\mathrm{AMC} = 10^{-10}\\,M_\\odot$\n$\\rho_\\mathrm{AMC} = 10^6 \\,M_\\odot\\,\\mathrm{pc}^{-3}$", transform=plt.gca().transAxes, ha='left', va = 'top', fontsize=14)
 
-plt.gca().set_xticks(np.geomspace(1e-7, 1e-2, 6))
+plt.gca().set_xticks(np.geomspace(1e-7, 1e-3, 5))
 #plt.gca().set_xticklabels([], minor=True)
 
 plt.savefig("../../plots/AMC_densityprofiles.pdf", bbox_inches='tight')
