@@ -23,15 +23,19 @@ plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k:', label='$E_i^\mathrm{unbound}/E_
 
 dE_PL, dM_PL, fej_PL, Eub_PL = np.loadtxt("../../data/Perturbations_PL.txt", unpack=True)
 dE_NFW, dM_NFW, fej_NFW, Eub_NFW = np.loadtxt("../../data/Perturbations_NFW.txt", unpack=True)
+dE_NFWd, dM_NFWd, fej_NFWd, Eub_NFWd = np.loadtxt("../../data/Perturbations_NFWd.txt", unpack=True)
 
 plt.loglog(dE_PL, dM_PL, linestyle ='-', label = 'Power-law', color='C0')
 plt.loglog(dE_NFW, dM_NFW, linestyle = '-', label = 'NFW', color='C8')
+plt.loglog(dE_NFWd, dM_NFWd, linestyle = '-', label = 'NFW(d)', color='C9')
 
 plt.loglog(dE_PL, fej_PL, linestyle ='--', color='C0')
 plt.loglog(dE_NFW, fej_NFW, linestyle = '--', color='C8')
+plt.loglog(dE_NFWd, fej_NFWd, linestyle = '--', color='C9')
 
 plt.loglog(dE_PL, Eub_PL, linestyle =':', color='C0')
 plt.loglog(dE_NFW, Eub_NFW, linestyle = ':', color='C8')
+plt.loglog(dE_NFW, Eub_NFWd, linestyle = ':', color='C9')
 
 plt.xlabel(r"$\Delta E/E_\mathrm{bind}$")
 #plt.ylabel(r"$\Delta M/M$")
@@ -46,7 +50,51 @@ plt.gca().set_xticks(np.geomspace(1e-5, 1e3, 9))
 plt.gca().set_yticks(np.geomspace(1e-6, 1e0, 7), minor=True)
 plt.gca().set_yticklabels([], minor=True)
 
-plt.savefig("../../plots/MassLoss.pdf", bbox_inches='tight')
+plt.savefig("../../plots/MassLoss_check.pdf", bbox_inches='tight')
+
+
+#---------------------------
+
+#-------------------
+
+plt.figure(figsize=(7,5))
+
+plt.axhline(1, linestyle='--', color='k')
+
+plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k-', label='$\Delta M/M$')
+plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k--', label='$f_\mathrm{ej}$')
+plt.loglog([1e-12, 1e-12], [1e-12, 1e-12], 'k:', label='$E_i^\mathrm{unbound}/E_i$')
+
+dE_PL, dM_PL, fej_PL, Eub_PL = np.loadtxt("../../data/Perturbations_PL.txt", unpack=True)
+dE_NFW, dM_NFW, fej_NFW, Eub_NFW = np.loadtxt("../../data/Perturbations_NFW.txt", unpack=True)
+dE_NFWd, dM_NFWd, fej_NFWd, Eub_NFWd = np.loadtxt("../../data/Perturbations_NFWd.txt", unpack=True)
+
+#plt.loglog(dE_PL, dM_PL, linestyle ='-', label = 'Power-law', color='C0')
+plt.loglog(dE_NFW, dM_NFW, linestyle = '-', label = r'NFW ($c = 100$)', color='C8')
+plt.loglog(dE_NFWd, dM_NFWd, linestyle = '-', label = r'NFW ($c = 10000$)', color='C9')
+
+#plt.loglog(dE_PL, fej_PL, linestyle ='--', color='C0')
+plt.loglog(dE_NFW, fej_NFW, linestyle = '--', color='C8')
+plt.loglog(dE_NFWd, fej_NFWd, linestyle = '--', color='C9')
+
+#plt.loglog(dE_PL, Eub_PL, linestyle =':', color='C0')
+plt.loglog(dE_NFW, Eub_NFW, linestyle = ':', color='C8')
+plt.loglog(dE_NFW, Eub_NFWd, linestyle = ':', color='C9')
+
+plt.xlabel(r"$\Delta E/E_\mathrm{bind}$")
+#plt.ylabel(r"$\Delta M/M$")
+
+plt.legend(loc='lower right', fontsize=16)
+
+plt.ylim(1e-6, 2)
+plt.xlim(1e-5, 1e3)
+
+plt.gca().set_xticks(np.geomspace(1e-5, 1e3, 9))
+#plt.gca().set_xticklabels([], minor=True)
+plt.gca().set_yticks(np.geomspace(1e-6, 1e0, 7), minor=True)
+plt.gca().set_yticklabels([], minor=True)
+
+plt.savefig("../../plots/MassLoss_NFWcompare.pdf", bbox_inches='tight')
 
 
 #--------------------------
@@ -103,6 +151,64 @@ for profile in ["PL", "NFW"]:
 
     plt.savefig("../../plots/Perturbations_" + profile + ".pdf", bbox_inches="tight")
 
+#--------------------------------------------
+
+plt.figure(figsize=(7,5))
+
+colorlist = ["C0", "C8", "C9"]
+
+for j, profile in enumerate(["PL", "NFW", "NFWc10000"]):
+
+    mc = AMC.AMC(M=1e-10, delta=1.0, profile=profile)
+
+    Npert = 100000
+
+    Mlist = np.zeros(Npert)
+    Rlist = np.zeros(Npert)
+    Elist = np.zeros(Npert)
+    rholist = np.zeros(Npert)
+
+    #Perturbation which is 1 permille of the binding energy
+    dE = (1/Npert)*mc.Ebind()
+    #print(dE)
+    for i in range(Npert):
+        Mlist[i] = mc.M
+        Rlist[i] = mc.R
+        Elist[i] = mc.Ebind()
+        rholist[i] = mc.rho_mean()
+    
+        if (mc.M > 1e-28):
+            #Inject an energy dE into the minicluster
+            mc.perturb(dE)
+
+
+    #print("here!")
+    
+
+    #plt.axhline(1., linestyle='--', color='grey')
+
+    plt.semilogy(rholist[Mlist > 1e-28]/rholist[0], color=colorlist[j], label=profile)
+    #plt.plot(Rlist/Rlist[0], label=r'$R/R_i$', color='C2')
+    #plt.plot(Elist/Elist[0], label=r'$E_\mathrm{bind}/E_{\mathrm{bind},i}$', color='C3')
+    #plt.plot(rholist/rholist[0], label=r'$\bar{\rho}/\bar{\rho}_i$')
+
+
+
+
+
+    #if (profile == "NFW"):
+    #    profile_text = "NFW"
+    #elif (profile == "PL"):
+    #    profile_text = "Power-law"
+plt.ylabel(r"$\bar{\rho}/\bar{\rho}_\mathrm{ini}$")
+plt.xlabel(r"Number of perturbations")
+plt.legend()
+plt.ylim(1e-6, 1e6)
+plt.xlim(0, Npert)
+
+plt.title(r"$\Delta E/E_{\mathrm{bind},i} = 10^{-5}$")
+
+plt.savefig("../../plots/Perturbations_density_1e5.pdf", bbox_inches="tight")
 
 
 plt.show()
