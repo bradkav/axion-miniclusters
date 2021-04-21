@@ -88,8 +88,11 @@ if (AS_CUT):
 
 
 #Mass function
-STRIPPED = True if (profile == "NFW") else False
-AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg, stripped=STRIPPED)
+if (profile == "PL"):
+    AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+elif (profile == "NFW"):
+    AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+    
 
 M_cut = 1e-29
 

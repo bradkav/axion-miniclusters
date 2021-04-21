@@ -127,9 +127,11 @@ if (AS_CUT):
     print("> Calculating with axion-star cut...")
     cut_text = "_AScut"
 
-#Mass function 
-STRIPPED = True if (profile == "NFW") else False
-AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg, stripped=STRIPPED)
+#Mass function
+if (profile == "PL"):
+    AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+elif (profile == "NFW"):
+    AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 
 plt_path = "../plots/"
 dist_path = dirs.data_dir+"distributions/"
