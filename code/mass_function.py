@@ -63,9 +63,20 @@ def calc_Mmax(m_a):
     # M_max is Eq.22 in 1707.03310 at z=0
     return 4.9e6*M0
 
+#Calculate the mass of a minicluster of tidal stripping from the MW:
+#Sec. 2.2 of https://arxiv.org/abs/1403.6827
+A_MW = 1.34
+zeta = 0.07
+t_dyn = 2.4e9
+t_MW = 13.5e9
+M_MW = 1e12
+def mass_after_stripping(m_i):
+    return m_i*(1 + zeta*(m_i/M_MW)**zeta*(A_MW*t_MW/t_dyn))**(-1/zeta)
+
+
 class PowerLawMassFunction:
     
-    def __init__(self, m_a, gamma):
+    def __init__(self, m_a, gamma, stripped=False):
         
         #These parameters are specific to the model we use
         self.gamma = gamma
@@ -78,7 +89,15 @@ class PowerLawMassFunction:
         self.mmin = calc_Mmin(m_a)
         self.mmax = calc_Mmax(m_a)
         
+        #Here, we generally need the average mass *before* any disruption, so let's calculate this
+        #before we do any correction for stripping due to the MW halo
         self.mavg = ((gamma)/(gamma + 1))*(self.mmax**(gamma + 1) - self.mmin**(gamma+1))/(self.mmax**gamma - self.mmin**gamma)
+        
+        if (stripped):
+            self.mmin = mass_after_stripping(self.mmin)
+        else:
+            self.mmax = mass_after_stripping(self.mmax)
+        
         
     def dPdlogM_internal(self, mass):
         """

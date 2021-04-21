@@ -51,14 +51,10 @@ warnings.filterwarnings('error')
 #This mass corresponds roughly to an axion decay 
 #constant of 3e11 and a confinement scale of Lambda = 0.076
 in_maeV   = 20e-6        # axion mass in eV
-in_gg     = -0.5        
+in_gg     = -0.7        
 
 print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
-AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 
-M_cut = 1e-29
-
-IDstr = ""
 
 ######################
 ####   OPTIONS  ######
@@ -89,6 +85,16 @@ cut_text = ""
 if (AS_CUT):
     print("> Calculating with axion-star cut...")
     cut_text = "_AScut"
+
+
+#Mass function
+STRIPPED = True if (profile == "NFW") else False
+AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg, stripped=STRIPPED)
+
+M_cut = 1e-29
+
+IDstr = "_wStripping"
+
 
 Nbins_mass   = 300
 Nbins_radius = 500 #Previously 500

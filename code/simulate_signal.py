@@ -72,12 +72,14 @@ M_cut  = 1.0e-29
 #This mass corresponds roughly to an axion decay 
 #constant of 3e11 and a confinement scale of Lambda = 0.076
 in_maeV   = 20e-6        # axion mass in eV
-in_gg     = -0.5        
+in_gg     = -0.7        
+
+IDstr = "_wStripping"
 
 print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
-AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 
-IDstr = ""
+
+
 
 ## Neutron Star characteristics
 MNS = 1.4     # MSun
@@ -125,6 +127,9 @@ if (AS_CUT):
     print("> Calculating with axion-star cut...")
     cut_text = "_AScut"
 
+#Mass function 
+STRIPPED = True if (profile == "NFW") else False
+AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg, stripped=STRIPPED)
 
 plt_path = "../plots/"
 dist_path = dirs.data_dir+"distributions/"
