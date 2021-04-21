@@ -88,9 +88,9 @@ if (AS_CUT):
 
 
 #Mass function
-if (profile == "PL" or UNPERTURBED == True):
+if (PROFILE == "PL" or UNPERTURBED == True):
     AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
-elif (profile == "NFW"):
+elif (PROFILE == "NFW"):
     AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
     
 
@@ -158,7 +158,7 @@ def main():
         # Gather the list of files to be used, then loop over semi-major axis a
         ff1 = glob.glob(dirs.montecarlo_dir + 'AMC_logflat_*' + PROFILE + circ_text +  '.txt')
         a_grid = np.zeros(len(ff1))
-
+        print(dirs.montecarlo_dir)
 
         for i, fname in enumerate(ff1):
             #print(fname)

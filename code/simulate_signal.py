@@ -128,9 +128,9 @@ if (AS_CUT):
     cut_text = "_AScut"
 
 #Mass function
-if (profile == "PL" or UNPERTURBED == True):
+if (PROFILE == "PL" or UNPERTURBED == True):
     AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
-elif (profile == "NFW"):
+elif (PROFILE == "NFW"):
     AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 
 plt_path = "../plots/"
