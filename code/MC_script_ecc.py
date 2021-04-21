@@ -10,6 +10,8 @@ from tqdm import tqdm
 import argparse
 import sys
 
+import dirs
+
 from matplotlib import pyplot as plt
 
 def getOptions(args=sys.argv[1:]):
@@ -90,11 +92,6 @@ for j in range(N_AMC):
     #print(j)
     # Initialise the AMC
     minicluster = AMC.AMC(M = M_list[j], delta = delta_list[j], profile=profile)
-    #print(profile, minicluster.R, minicluster.k)
-    #minicluster_NFW = AMC.AMC(M = M_list[j], delta = delta_list[j], profile="NFW")
-    #print(minicluster.R)
-    #print(minicluster_NFW.R)
-    #print(minicluster.M, minicluster.R, minicluster.rho)
     M_list_initial.append(minicluster.M)
     R_list_initial.append(minicluster.R)
     delta_list_initial.append(minicluster.delta)
@@ -103,18 +100,15 @@ for j in range(N_AMC):
     E_test = PB.Elist(sig_rel, 1.0, Mp, minicluster.M, Rrms2 = minicluster.Rrms2())
     #E_test_NFW = PB.Elist(sig_rel, 1.0, Mp, minicluster_NFW.M, Rrms2 = minicluster_NFW.Rrms2())
 
+    #Calculate b_max based on a 'test' impact at b = 1 pc
     N_cut = 1e6
     bmax = ((E_test/minicluster.Ebind())*N_cut)**(1./4)
     rho0 = minicluster.rho_mean()
-    #bmax_NFW = ((E_test_NFW/minicluster_NFW.Ebind())*N_cut)**(1./4)
 
-    
-    
-    #print("PL:", E_test, minicluster.Ebind(), E_test/minicluster.Ebind(), bmax)
-    #print("NFW:", E_test_NFW, minicluster_NFW.Ebind(), E_test_NFW/minicluster_NFW.Ebind(), bmax_NFW)
     
     orb = orbits.elliptic_orbit(a_list[j], e_list[j])
     
+    #Calculate total number of encounters
     Ntotal = min(int(N_cut),int(PB.Ntotal_ecc(Tage, bmax, orb, psi_list[j], b0=0.0))) # This needs to be checked
     Ntotal_list.append(Ntotal)
 
@@ -135,16 +129,11 @@ for j in range(N_AMC):
         continue
     
     
-    
+    #Sample properties of the stellar encounters
     blist = PB.dPdb(bmax, Nsamples=Ntotal)
     # print(a_list[j], e_list[j], psi_list[j])
     v_amc_list, r_interaction_list = PB.dPdVamc(orb, psi_list[j], bmax, Nsamples=Ntotal)
-    # print(v_amc_list)
-    # quit()
-    #Vlist = []
-    #print(j)
-    #sig_rel_tot = np.sqrt(v_amc_list**2 + PB.sigma(r_interaction_list)**2) # Speeds here need to be checked
-    Vlist = PB.dPdV(v_amc_list, PB.sigma(r_interaction_list), Nsamples=Ntotal) #FIXME: Check that this is completely correct
+    Vlist = PB.dPdV(v_amc_list, PB.sigma(r_interaction_list), Nsamples=Ntotal) 
     #print(Vlist)
 
     Vlist = np.array(Vlist)
@@ -156,25 +145,18 @@ for j in range(N_AMC):
     dElist = np.zeros(Ntotal)
     Rlist = np.zeros(Ntotal)
     
+    #How long does the simulation have left?
     N_enc = 0
-    #print("  ")
-    #print("  ")
-    
-    #zoom_in = False
     T_remain = 1.0*Tage
     dT = T_remain/Ntotal
     #N_remain = N_total
     i = 0
-    #print(j, Ntotal, N_enc)  
+
+    #Iteratively perturb the AMCs
     while T_remain > dT:
     #for i in range(Ntotal):
         T_remain -= dT
         N_enc += 1
-        
-        #Mlist[i] = minicluster.M
-        #Rlist[i] = minicluster.R
-        #rholist[i] = minicluster.M/(4*np.pi*minicluster.R**3/3)
-        #Etotlist[i] = minicluster.Etotal()
         
         #print(minicluster.M, minicluster.R, minicluster.rho)
         if (minicluster.M < M_cut):
@@ -190,9 +172,7 @@ for j in range(N_AMC):
             minicluster.perturb(E_pert)
             
             if (minicluster.M > M_cut):
-                
-                #if (delta_E > 0.055):
-                #if (delta_E > 0.1):
+                #If the density of the AMC increases, recompute the number of encounters required
                 if (minicluster.rho_mean() > rho0):
                     #print(dT, T_remain)
                     E_test = PB.Elist(sig_rel, 1.0, Mp, minicluster.M, Rrms2 = minicluster.Rrms2())
@@ -220,16 +200,6 @@ for j in range(N_AMC):
     M_list_final.append(minicluster.M)
     R_list_final.append(minicluster.R)
     delta_list_final.append(minicluster.delta)
-    #
-    #plt.figure()
-    #
-    #plt.loglog(np.abs(dElist), 'k--', alpha=0.1)
-    #plt.loglog(np.abs(Mlist), label=r'$M$')
-    #plt.loglog(np.abs(Rlist), label=r'$R$')
-    #plt.loglog(np.abs(rholist),  label=r'$\rho$')
-    #plt.legend(loc='best')
-    #
-    #plt.show()
     #
 #print("Number of disrupted AMCs:", N_disrupt)
 M_list_initial = np.array(M_list_initial)
@@ -296,6 +266,6 @@ else:
 
 Results = np.column_stack([M_list_initial, R_list_initial, delta_list_initial, M_list_final, R_list_final, delta_list_final, e_list, psi_list])
 if (SAVE_OUTPUT):
-    np.savetxt('../AMC_montecarlo_data/AMC_logflat_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial overdensity delta,  M final [Msun], R final [pc], Final overdensity delta, eccentricity, psi [rad]")
-    np.savetxt('../AMC_montecarlo_data/AMC_Ninteractions_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Ntotal_list)
-    np.savetxt('../AMC_montecarlo_data/AMC_Ninteractions_true_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Nenc_list)
+    np.savetxt(dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial overdensity delta,  M final [Msun], R final [pc], Final overdensity delta, eccentricity, psi [rad]")
+    np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Ntotal_list)
+    np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_true_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Nenc_list)

@@ -11,15 +11,6 @@ from scipy.integrate import quad, cumtrapz
 from scipy.special import erfi
 from scipy.special import gamma as gamma_fun
 
-#BJK: Corrections
-#   - Neutron star radius set to 1.4 km -> Changed to 10 km
-#   - Neutron star mass set to 1 M_sun -> Changed to 1.4 M_sun
-#   - Angular dependence of signal not correct
-#   - Density enhancement around neutron star now incorporated.
-#   - Factor of GeV -> J missing in calculation of flux in muJy
-    
-
-
 ##
 ##  NS distributions
 ##
@@ -55,6 +46,8 @@ def x_of_rho(rho):
     x[m2] = c**-1/(rho[m2])**(1/3)
     return x    
 #--------------------------------------------------------------
+
+#Number densities of neutron stars
 
 #R_cyl is the cylindrical galactocentric distance
 def nNS_bulge(R_cyl, Z):
@@ -117,36 +110,6 @@ def dPdZ(R_sph, Z):
     #P(Z) = P(R_sph, Z)/P(R_sph) = (2 pi R_sph n(R_cyl, Z)/(4 pi R_sph^2 <n(R_sph)>))
     return result
 #--------------------------------------------------------------
-
-# Integrate over \phi in spherical coordinates
-#def nNS_sph(R):
-#    Nb = 6.0e8
-#    ab = 0.6e3  #pc
-#    n_bulge = Nb/(2.0*np.pi)*(ab/R)/(ab+R)**3
-#
-#    Nd = 4.0e8
-#    sz = 1.0e3  #pc
-#    ss = 5.0e3  #pc
-#    n0 = Nd/(4.0*np.sqrt(2*np.pi)*sz*ss*R)
-#    n_disc = n0*np.exp(-0.5*(R/ss)**2-0.5*(ss/sz)**2)
-#    n_disc *= (erfi(ss/(np.sqrt(2)*sz)) + erfi((R*sz - ss**2)/(np.sqrt(2)*ss*sz)))
-#    #n_disc = n0*2.0*np.exp(-0.5*(R/ss)**2)*np.sqrt(np.pi)*ss*sz
-#    #n_disc = n_disc*math.erf(R*np.sqrt(ss**2 - sz**2/2.0)/ss/sz)
-#    #n_disc = n_disc/(R*np.sqrt((2.0*ss)**2 - 2.0*sz**2))
-#
-#    return n_bulge + n_disc
-
-#R here is the 'spherical' galactocentric distance
-#def n_NS_total(R, Z):
-#    Nb = 6.0e8
-#    ab = 0.6e3
-#    n_bulge = Nb/(2.0*np.pi)*(ab/R)/(ab+R)**3
-#    Nd = 4.0e8
-#    sz = 1.0e3
-#    ss = 5.0e3
-#    nd = Nd/(4.0*np.pi*sz*ss**2)
-#    return n_bulge + nd*np.exp( -0.5*(R**2-Z**2)/ss**2 - (np.abs(Z)/sz))
-
 
 ## NFW profile for AMC distribution
 def rhoNFW(R):
@@ -213,6 +176,7 @@ def MC_profile_NFW(density, r):
     return rho_s*MSuninGeV/(c*r*(1+c*r)**2)
     
     
+#Conversion radius
 def rc(theta, B0, P0, mGhz):
     ## code Eq.5 in 1804.03145
     ## Returns the conversion radius in pc
@@ -220,6 +184,7 @@ def rc(theta, B0, P0, mGhz):
     ft  = np.abs(3.*np.cos(theta)**2 - 1)
     return rc0*(RNS/(10*kmtopc))*(ft*B0/1.e14*1/P0/mGhz**2)**(1./3.)
 
+#Radio signal
 def signal(theta, Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, profile = "PL"):
     # Returns the expected signal in microjansky
     cs          = 3.0e8     # speed of light in m/s
@@ -248,8 +213,6 @@ def signal(theta, Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, profil
     elif (profile == "NFW"):
         rhoa = MC_profile_NFW(density, r)
         
-    #BJK: I think this expression for the flux is wrong. Possibly? The angular dependence certainly looks odd.
-    #Also, it looks like it doesn't correct for the enhancement of density at r_c?
     Flux  = np.pi/6.*ga**2*vc*(RNS/rcT)**3*BGeV**2*np.abs(3.*np.cos(theta)**2-1.)*(rhoa*RNS**3/ma)
     
     # 1.e32 is the conversion from SI to muJy. hbar converts from GeV to s^-1
@@ -260,6 +223,7 @@ def signal(theta, Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, profil
     else:
         return Flux/(BWD*4.*np.pi*(s0*pc)**2*hbarT) * 1.e32,
 
+#Isotropized radio signal
 def signal_isotropic(Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, profile = "PL"):
     # Returns the expected signal in microjansky
     cs          = 3.0e8     # speed of light in m/s
@@ -281,9 +245,10 @@ def signal_isotropic(Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, pro
     #Fix theta = pi, to give |3 cos(theta) - 1|^{1/3} = 1 in the expression for r_c
     rcT_mean = 0.869*rc(np.pi, Bfld, Prd, maGHz) # *MEAN* conversion radius in pc 
     
-    #What the hell is this?
+
     #vc    = 0.544467*np.sqrt(RNS/rcT_mean) # free-fall velocity at rc in units of c
     vc = np.sqrt(2*G_pc*MNS/rcT_mean)/(cs/pc) # free-fall velocity at *MEAN* rc in units of c
+    print(vc)
 
     BWD   = 1.0e3 + density*0.0 #Fix bandwidth to 1 kHz
     
@@ -297,7 +262,9 @@ def signal_isotropic(Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, pro
     #Correct angular dependence of B-field should be B^2(theta) ~ (3.*np.cos(theta)**2+1.)
     #See. Eq. 2 of https://arxiv.org/pdf/1811.01020.pdf. Taking the angular average we just
     #get a factor of 2: 0.5 int_{-1}^1 (3.*x**2+1.) dx = 2
-    Flux  = 2*np.pi/6.*ga**2*(RNS/rcT_mean)**3*BGeV**2*(rho_rc*RNS**3/ma) #Removed a factor of vc
+
+    #Flux  = 2*np.pi/6.*ga**2*vc*(RNS/rcT_mean)**3*BGeV**2*(rho_rc*RNS**3/ma)
+    Flux  = 2*np.pi/6.*ga**2*(RNS/rcT_mean)**3*BGeV**2*(rho_rc*RNS**3/ma) #Corrected by a factor of 1/vc
     
     # 1.e32 is the conversion from SI to muJy. hbar converts from GeV to s^-1
     if ret_bandwidth:
@@ -306,6 +273,7 @@ def signal_isotropic(Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, pro
         return Flux*GeV_to_J/(BWD*4.*np.pi*(s0*pc)**2*hbarT) * 1.e32,
 
 
+#BJK: I don't think this code is used...
 def n(rho, psi):
     # The AMC stars with a positions defined by rho in pc
     # Its angle out of the plane is given by psi
@@ -318,10 +286,6 @@ def n(rho, psi):
     n_t = lambda t: nNS(R(t), Z(t))
     return n_t
 
-def Ntotal(nfunc, Tage, sigmau):
-    Ntfunc = lambda t: nfunc(t)*sigmau
-    tlist  = np.linspace(0, Tage, 1000)
-    return np.trapz(Ntfunc(tlist), x=tlist)
 
 def Gamma(nfunc, Tage, sigmav ):
     Ntfunc = lambda t: nfunc(t)*sigmav
@@ -351,15 +315,3 @@ def inverse_transform_sampling(function, x_range, nbins=1000, n_samples=1000):
     r = np.random.rand(n_samples)
     return inv_cdf(r)
 
-def dPdR(bmax, Nsamples=1000):
-    # b in km
-    # bmin should be the minimum impact encounter
-    brange = np.array([b0,bmax])
-    DF_b = lambda x: 2*b/(bmax**2 - b0**2)
-    blist = inverse_transform_sampling(DF_b, brange, n_samples=Nsamples)
-    return blist
-
-def Elist(Vlist, blist, Mp, Ms, Rrms2):
-    # V in km s^-1
-    # M in Msun
-    return 4*(G**2)*(Mp**2)*Ms*Rrms2/3/(Vlist**2)/(blist**4)
