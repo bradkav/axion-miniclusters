@@ -10,6 +10,9 @@ G_N = 4.301e-3 #(km/s)^2 pc/Msun
 z_eq = 3400
 rho_eq = 1512.0 #Solar masses per pc^3
 
+def f_NFW(x):
+    return np.log(1+x) - x/(1+x)
+
 #NFW properties
 c = 100.
 dE_NFW, dM_NFW, fej_NFW, fub_NFW = np.loadtxt(script_dir + "../data/Perturbations_NFW.txt", unpack=True)
@@ -23,9 +26,30 @@ def fej_interp_NFW(x):
 def fub_interp_NFW(x):
     return np.interp(x, dE_NFW, fub_NFW, left=0.0, right=1.0)
 
-def f_NFW(x):
-    return np.log(1+x) - x/(1+x)
+c_alt = 1000.
+dE_NFWd, dM_NFWd, fej_NFWd, fub_NFWd = np.loadtxt(script_dir + "../data/Perturbations_NFWd.txt", unpack=True)
+#dM_interp_NFW = interp1d(x_M_NFW, y_M_NFW, bounds_error=False,fill_value = 0.0)
+def dM_interp_NFWd(x):
+    return np.interp(x, dE_NFWd, dM_NFWd, left=0.0, right=1.0)
     
+def fej_interp_NFWd(x):
+    return np.interp(x, dE_NFWd, fej_NFWd, left=0.0, right=1.0)
+    
+def fub_interp_NFWd(x):
+    return np.interp(x, dE_NFWd, fub_NFWd, left=0.0, right=1.0)
+    
+
+c10000 = 10000.
+dE_NFWc10000, dM_NFWc10000, fej_NFWc10000, fub_NFWc10000 = np.loadtxt(script_dir + "../data/Perturbations_NFW_c10000.txt", unpack=True)
+#dM_interp_NFW = interp1d(x_M_NFW, y_M_NFW, bounds_error=False,fill_value = 0.0)
+def dM_interp_NFWc10000(x):
+    return np.interp(x, dE_NFWc10000, dM_NFWc10000, left=0.0, right=1.0)
+    
+def fej_interp_NFWc10000(x):
+    return np.interp(x, dE_NFWc10000, fej_NFWc10000, left=0.0, right=1.0)
+    
+def fub_interp_NFWc10000(x):
+    return np.interp(x, dE_NFWc10000, fub_NFWc10000, left=0.0, right=1.0)
     
 dE_PL, dM_PL, fej_PL, fub_PL = np.loadtxt(script_dir + "../data/Perturbations_PL.txt", unpack=True)
 #dEloss_interp_NFW = interp1d(x_E_NFW, y_E_NFW, bounds_error=False,fill_value = 0.0)
@@ -43,6 +67,10 @@ def fub_interp_PL(x):
 delta_list = np.linspace(0, 1000, 10000)
 rho_list = 140*(1+delta_list)*delta_list**3*(rho_eq/2.)
 delta_of_rho_interp = interp1d(rho_list, delta_list)
+rho_of_delta_interp = interp1d(delta_list, rho_list)
+print("%.3e, %.3e"%(rho_of_delta_interp(0.1), rho_of_delta_interp(20)))
+print("%.3e"%(rho_of_delta_interp(1),))
+print(delta_of_rho_interp(1e6))
 
 def delta_of_rho(rho1):
     if (rho1 > 1e10):
@@ -81,6 +109,29 @@ class AMC:
             self.dM_interp = dM_interp_NFW
             self.fej_interp = fej_interp_NFW
             self.fub_interp = fub_interp_NFW
+        
+        elif (profile == "NFWd"):
+            self.alpha_sq = 0.084 #Prefactor for R^2
+            self.beta = 14.167 #Prefactor for E_bind
+            self.kappa = 14.208 #Prefactor for velocity dispersion
+            rho_s = self.rho/0.58
+            self.R = c_alt*(self.M/(4*np.pi*rho_s*f_NFW(c_alt)))**(1/3.)
+            self.dE_threshold = 1e-5
+            self.dM_interp = dM_interp_NFWd
+            self.fej_interp = fej_interp_NFWd
+            self.fub_interp = fub_interp_NFWd
+            
+        elif (profile == "NFWc10000"):
+            self.alpha_sq = 0.063 #Prefactor for R^2
+            self.beta = 74.29 #Prefactor for E_bind
+            self.kappa = 74.32 #Prefactor for velocity dispersion
+            #rho_s = self.rho/0.58
+            rho_s = self.rho
+            self.R = c10000*(self.M/(4*np.pi*rho_s*f_NFW(c10000)))**(1/3.)
+            self.dE_threshold = 1e-6
+            self.dM_interp = dM_interp_NFWc10000
+            self.fej_interp = fej_interp_NFWc10000
+            self.fub_interp = fub_interp_NFWc10000
         
         else:
             raise ValueError("AMC profile parameter must be `PL' or `NFW'") 
@@ -149,6 +200,10 @@ class AMC:
             #    print(dE_frac)
             if (self.profile == "NFW"): #Account for different definitions of rho
                 self.rho *= c/(3*f_NFW(c))
+            if (self.profile == "NFWd"):
+                self.rho *= 0.58*c_alt/(3*f_NFW(c_alt))
+            if (self.profile == "NFWc10000"):
+                self.rho *= c10000/(3*f_NFW(c10000))
             self.delta = delta_of_rho(self.rho)
         
 
