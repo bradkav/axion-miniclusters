@@ -448,12 +448,15 @@ def calculate_survivalprobability(a_grid, a_all, m_final, m_ini, r_final):
     #print(Nsamp_a)
     #print(Nsurv_a)
     
+    #Here, we only need to reweight by the unperturbed mass function
+    AMC_MF_unpert = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+    
     psurv_a_AScut = np.zeros(len(a_grid))
     for i in range(len(a_grid)):
         inds = (a_all == a_grid[i])
         AS_mask = (r_AS(m_ini[inds]) < r_final[inds]) & (m_final[inds] >= M_cut)
-        p_target = AMC_MF.dPdlogM(m_ini[inds])
-        p_sample = 1/(np.log(AMC_MF.mmax) - np.log(AMC_MF.mmin))
+        p_target = AMC_MF_unpert.dPdlogM(m_ini[inds])
+        p_sample = 1/(np.log(AMC_MF_unpert.mmax) - np.log(AMC_MF_unpert.mmin))
         m_w = p_target/p_sample
         psurv_a_AScut[i] = np.sum(m_w*AS_mask)/np.sum(inds)
     
@@ -496,9 +499,13 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius):
     weights_survived = weights*np.atleast_2d((mass >= M_cut)).T
     weights_masscut = weights*np.atleast_2d((mass >= 1e-1*mass_ini)).T
     
+    
     AS_mask = (r_AS(mass_ini) < radius) & (mass >= M_cut)
-    p_target = AMC_MF.dPdlogM(mass_ini)
-    p_sample = 1/(np.log(AMC_MF.mmax) - np.log(AMC_MF.mmin))
+    
+    #Here, we only need to reweight by the unperturbed mass function
+    AMC_MF_unpert = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+    p_target = AMC_MF_unpert.dPdlogM(mass_ini)
+    p_sample = 1/(np.log(AMC_MF_unpert.mmax) - np.log(AMC_MF_unpert.mmin))
     m_w = p_target/p_sample
     #m_w = p_target/np.sum(p_target)
     #BJK: Need to reweight by mass function...
@@ -539,8 +546,11 @@ def calculate_weights_circ(a_grid, a, e, mass, mass_ini, radius):
     weights_masscut = weights*np.atleast_2d((mass >= 1e-1*mass_ini)).T
     
     AS_mask = (r_AS(mass_ini) < radius) & (mass >= M_cut)
-    p_target = AMC_MF.dPdlogM(mass_ini)
-    p_sample = 1/(np.log(AMC_MF.mmax) - np.log(AMC_MF.mmin))
+    
+    #Here, we only need to reweight by the unperturbed mass function
+    AMC_MF_unpert = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+    p_target = AMC_MF_unpert.dPdlogM(mass_ini)
+    p_sample = 1/(np.log(AMC_MF_unpert.mmax) - np.log(AMC_MF_unpert.mmin))
     m_w = p_target/p_sample
     #m_w = p_target/np.sum(p_target)
     #BJK: Need to reweight by mass function...

@@ -103,10 +103,14 @@ class GenericMassFunction(ABC):
             mass = mass[None]  # Makes x 1D
             scalar_input = True
 
-        result = self.dPdlogM_internal(mass)
+        result = 0.0*mass
         
-        result[mass > self.mmax] = 0.
-        result[mass < self.mmin] = 0.
+        inds = (self.mmin < mass) & (mass < self.mmax)
+        
+        result[inds] = self.dPdlogM_internal(mass[inds])
+        
+        #result[mass > self.mmax] = 0.
+        #result[mass < self.mmin] = 0.
         
         if scalar_input:
             return (np.squeeze(result)).item(0)
@@ -168,8 +172,9 @@ class StrippedPowerLawMassFunction(GenericMassFunction):
         
         self.mmin = np.min(mf_list)
         self.mmax = np.max(mf_list)
+        print("M_max:", self.mmax)
         
-        self.mi_of_mf = InterpolatedUnivariateSpline(mf_list, mi_list)
+        self.mi_of_mf = InterpolatedUnivariateSpline(mf_list, mi_list, k=1, ext=1)
         self.dmi_by_dmf = self.mi_of_mf.derivative(n=1)
         
     def dPdlogM_nostripping(self, mass):
