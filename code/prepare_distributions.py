@@ -88,7 +88,7 @@ if (AS_CUT):
 
 
 #Mass function
-if (profile == "PL"):
+if (profile == "PL" or UNPERTURBED == True):
     AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 elif (profile == "NFW"):
     AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
