@@ -199,11 +199,11 @@ class AMC:
             #if (self.rho > 1e20):
             #    print(dE_frac)
             if (self.profile == "NFW"): #Account for different definitions of rho
-                self.rho *= c/(3*f_NFW(c))
+                self.rho *= c**3/(3*f_NFW(c))
             if (self.profile == "NFWd"):
-                self.rho *= 0.58*c_alt/(3*f_NFW(c_alt))
+                self.rho *= 0.58*c_alt**3/(3*f_NFW(c_alt))
             if (self.profile == "NFWc10000"):
-                self.rho *= c10000/(3*f_NFW(c10000))
+                self.rho *= c10000**3/(3*f_NFW(c10000))
             self.delta = delta_of_rho(self.rho)
         
 
