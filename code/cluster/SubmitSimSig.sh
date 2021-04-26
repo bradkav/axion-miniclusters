@@ -4,10 +4,10 @@
 #SBATCH -t 06:00:00                                                                                                                                        
 #SBATCH -p normal
 
-#SBATCH -o slurm_output/slurm-%j.out # STDOUT                                                                                                                           
-#SBATCH -e slurm_output/slurm-%j.err # STDERR
+#SBATCH -o /home/kavanagh/AMC/slurm_output/slurm-%j.out # STDOUT                                                                                                                           
+#SBATCH -e /home/kavanagh/AMC/slurm_output/slurm-%j.err # STDERR
 
-cd $HOME/AMC/
+cd $HOME/AMC/code/cluster
 
 #module load openmpi/gnu
 #module load python/2.7.9

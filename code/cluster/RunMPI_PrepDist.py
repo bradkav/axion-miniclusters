@@ -23,22 +23,25 @@ rank_temp = args.index
 myDir = "/home/kavanagh/AMC/code/"
 cmd = "cd "+myDir+" ; python3 prepare_distributions.py"
 
-if (rank == 0):
+if (rank in [0, 6]):
     cmd += " -profile PL"
-if (rank == 1):
+if (rank in [1, 7]):
     cmd += " -profile PL -circ"
-if (rank == 2):
+if (rank in [2, 8]):
     cmd += " -profile PL -unperturbed 1 -circ"
     
-if (rank == 3):
+if (rank in [3, 9]):
     cmd += " -profile NFW"
-if (rank == 4):
+if (rank in [4, 10]):
     cmd += " -profile NFW -circ"
-if (rank == 5):
+if (rank in [5, 11]):
     cmd += " -profile NFW -unperturbed 1 -circ"
 
-cmd += ' -max_rows 100000 -AScut'
-
-if (rank in [0, 1, 2, 3, 4, 5]):
+if (rank < 6):
+    cmd += ' -max_rows 100000 -AScut'
+else:
+    cmd += ' -max_rows 100000'
+    
+if (rank in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
     sts = call(cmd,shell=True)
 comm.Barrier()
