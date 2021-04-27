@@ -1,7 +1,7 @@
 #!/bin/bash
  
 #SBATCH -N 1 --ntasks-per-node=16  
-#SBATCH -t 06:00:00                                                                                                                                        
+#SBATCH -t 12:00:00                                                                                                                                        
 #SBATCH -p normal
 
 #SBATCH -o /home/kavanagh/AMC/slurm_output/slurm-%j.out # STDOUT                                                                                                                           
