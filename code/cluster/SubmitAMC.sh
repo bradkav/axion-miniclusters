@@ -3,17 +3,17 @@
 # Time should probably be about 60 hours
 
 #SBATCH -N 1 --ntasks-per-node=16  
-#SBATCH -t 24:00:00
+#SBATCH -t 30:00:00
 #SBATCH -p normal
 
 # #SBATCH -t 00:04:30
 # #SBATCH -p short
 
-#SBATCH -o slurm_output/slurm-%j.out # STDOUT                                                                                                                           
-#SBATCH -e slurm_output/slurm-%j.err # STDERR
+#SBATCH -o /home/kavanagh/AMC/slurm_output/slurm-%j.out # STDOUT                                                                                                                           
+#SBATCH -e /home/kavanagh/AMC/slurm_output/slurm-%j.err # STDERR
 
 
-cd $HOME/AMC/
+cd $HOME/AMC/cluster
 
 #module load openmpi/gnu
 #module load python/2.7.9

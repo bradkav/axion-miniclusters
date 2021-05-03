@@ -13,8 +13,11 @@ def sample_AMCs_logflat(m_a = 2e-5, n_samples=1000):
         #First sample the masses                                                                                                                               
     #It turns out that in this case, we can do the inverse                                                                                                 
     #sampling analytically if we have a power law distribution                                                                                            
-    #print(M_max(m_a))                                                                                                                                    
-    x_list = np.random.uniform(np.log(mass_function.calc_Mmin(m_a)), np.log(mass_function.calc_Mmax(m_a)), size = n_samples)
+    #print(M_max(m_a))
+
+    #Extend an order of magnitude above and below M_min, M_max, just in case we have to
+    #adjust these values later
+    x_list = np.random.uniform(np.log(0.1*mass_function.calc_Mmin(m_a)), np.log(10.0*mass_function.calc_Mmax(m_a)), size = n_samples)
     #M1 = M_min(m_a)**(1+gamma)                                                                                                                           
     #M2 = M_max(m_a)**(1+gamma)                                                                                                                            
     #M_list = (x_list*(M2 - M1) + M1)**(1/(1+gamma))                                                                                                      
