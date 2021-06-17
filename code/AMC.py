@@ -122,9 +122,9 @@ class AMC:
             self.fub_interp = fub_interp_NFWd
             
         elif (profile == "NFWc10000"):
-            self.alpha_sq = 0.063 #Prefactor for R^2
-            self.beta = 74.29 #Prefactor for E_bind
-            self.kappa = 74.32 #Prefactor for velocity dispersion
+            self.alpha_sq = 0.061 #Prefactor for R^2
+            self.beta = 74.0 #Prefactor for E_bind
+            self.kappa = 74.1 #Prefactor for velocity dispersion
             #rho_s = self.rho/0.58
             rho_s = self.rho
             self.R = c10000*(self.M/(4*np.pi*rho_s*f_NFW(c10000)))**(1/3.)

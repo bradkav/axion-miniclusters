@@ -12,14 +12,23 @@ frac_AScut_NFW = 0.0146239
 frac_AScut_PL = 0.0002719
 
 #IDstr = "_gamma-0.5"
-IDstr = ""
+#IDstr = ""
+IDstr = "_wStripping"
+
+#To-Do - make the correction for the initial range of samples masses more concrete
 
 if (IDstr ==  "_gamma-0.5"):
     frac_AScut_NFW = 0.0463458
     frac_AScut_PL = 0.002647
+elif (IDstr == "_wStripping"):
+    #frac_AScut_NFW = 0.0138*0.9332610321836602
+    frac_AScut_NFW = 0.0146239*0.8764842147261401
+    frac_AScut_PL = 0.0002719*0.8764842147261401
 else:
     frac_AScut_NFW = 0.0146239
     frac_AScut_PL = 0.0002719
+
+
 
 AS_CUT = True
 
@@ -27,6 +36,9 @@ cut_text = ""
 if (AS_CUT):
     print("> Calculating with axion-star cut...")
     cut_text = "_AScut"
+    print("> Initial fraction of AMCs surviving AS cut:")
+    print(">    NFW:", frac_AScut_NFW)
+    print(">    PL:", frac_AScut_PL)
 
 #------ Plot survival probability (as a function of a) --------------------
 
@@ -230,12 +242,12 @@ plt.xlabel('Galactocentric radius $r$ [kpc]')
 plt.ylabel('Encounter rate $\mathrm{d}\Gamma/\mathrm{d}r$ [kpc$^{-1}$ s$^{-1}$]')
 plt.legend(loc = 'upper left' , fontsize=15)
 
-plt.savefig('../../plots/EncounterRate%s.pdf'%(cut_text,), bbox_inches='tight')
+plt.savefig('../../plots/EncounterRate%s%s.pdf'%(cut_text,IDstr), bbox_inches='tight')
 
 #------Plot also with linear x-scale
 plt.xscale('linear')
 plt.xlim(0, 30)
-plt.savefig('../../plots/EncounterRate_linear%s.pdf'%(cut_text,), bbox_inches='tight')
+plt.savefig('../../plots/EncounterRate_linear%s%s.pdf'%(cut_text,IDstr), bbox_inches='tight')
 
 
 plt.show()

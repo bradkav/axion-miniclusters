@@ -172,7 +172,7 @@ class StrippedPowerLawMassFunction(GenericMassFunction):
         
         self.mmin = np.min(mf_list)
         self.mmax = np.max(mf_list)
-        print("M_max:", self.mmax)
+        #print("M_max:", self.mmax)
         
         self.mi_of_mf = InterpolatedUnivariateSpline(mf_list, mi_list, k=1, ext=1)
         self.dmi_by_dmf = self.mi_of_mf.derivative(n=1)

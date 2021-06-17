@@ -30,6 +30,9 @@ fstr = "_delta1.55"
 Rstr = "8.00"
 circstr = "_circ"
 
+def f_NFW(x):
+    return np.log(1+x) - x/(1+x)
+
 #print("> ------------------  CHANGE TO CIRC!!!!!!")
 
 M_i, R_i, M_f, R_f = np.loadtxt(dirs.montecarlo_dir + "AMC_test%s_a=%s_NFW%s.txt"%(fstr,Rstr,circstr), delimiter = ", ", unpack=True, usecols=(0,1,3,4))
@@ -40,6 +43,16 @@ rho_f = 3*M_f/(4*np.pi*R_f**3)
 
 rho_i_d = 3*M_i_d/(4*np.pi*R_i_d**3)
 rho_f_d = 3*M_f_d/(4*np.pi*R_f_d**3)
+
+#Adjust for a different initial mass
+nu = M_f/M_i
+
+M_i = M_i/(f_NFW(10000)/f_NFW(100))
+M_f = nu*M_i
+R_f = ((3*M_f)/(4*np.pi*rho_f))**(1/3)
+
+
+print("Initial mass (c = 10000):", M_i_d[0])
 
 print("Mean mass (c = 100):", np.mean(M_f[M_f > 1e-29]))
 print("Mean mass (c = 10000):", np.mean(M_f_d[M_f_d > 1e-29]))
@@ -103,7 +116,8 @@ fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=False, figsize=(20,5), gridspec
 #-------------------------
 ax1.set_yscale('log')
 ax1.set_xscale('log')
-ax1.axvline(1e-10, linestyle='--', color='k')
+ax1.axvline(M_i[0], linestyle='--', color='C8')
+ax1.axvline(M_i_d[0], linestyle='--', color='C9')
 ax1.plot(M_c, M_c*P_Mf, color='C8', label=r'NFW ($c = 100$)')
 ax1.plot(M_c, M_c*P_Mf_d, color='C9',label=r'NFW ($c = 10000$)')
 

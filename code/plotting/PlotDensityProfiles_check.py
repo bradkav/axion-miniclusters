@@ -68,8 +68,10 @@ R_list = np.geomspace(1e-8, 1e3, 1000)
 M0 = 1e-10
 rho0 = 1e6
 
+Ma = M0/2.26496
+
 Rmax_PL = R_PL(M0, rho0)
-Rmax_NFW = R_NFW(M0, rho0) 
+Rmax_NFW = R_NFW(Ma, rho0) 
 print("Mean density NFW:", 3*M0/(4*np.pi*Rmax_NFW**3))
 Rmax_NFW_v2 = R_NFW_v2(M0, rho0) 
 print("Mean density NFWd:", 3*M0/(4*np.pi*Rmax_NFW_v2**3))
@@ -81,8 +83,8 @@ Rmax_NFWa = R_NFW(M0, rho0, c = 10000)
 plt.loglog(R_list[R_list < Rmax_PL], rho_PL(R_list[R_list < Rmax_PL], M0, rho0), label = 'Power-law', color='C0')
 plt.loglog([Rmax_PL, Rmax_PL], [1e-10 , rho_PL(Rmax_PL, M0, rho0)], linestyle='--', color='C0')
 
-plt.loglog(R_list[R_list < Rmax_NFW], rho_NFW(R_list[R_list < Rmax_NFW], M0, rho0), label = r'NFW ($c=100$)', color='C8')
-plt.loglog([Rmax_NFW, Rmax_NFW], [1e-10 , rho_NFW(Rmax_NFW, M0, rho0)], linestyle='--', color='C8')
+plt.loglog(R_list[R_list < Rmax_NFW], rho_NFW(R_list[R_list < Rmax_NFW], Ma, rho0), label = r'NFW ($c=100$)', color='C8')
+plt.loglog([Rmax_NFW, Rmax_NFW], [1e-10 , rho_NFW(Rmax_NFW, Ma, rho0)], linestyle='--', color='C8')
 
 plt.loglog(R_list[R_list < Rmax_NFWa], rho_NFW(R_list[R_list < Rmax_NFWa], M0, rho0, c=10000), label = r'NFW ($c=10000$)', color='C9')
 plt.loglog([Rmax_NFWa, Rmax_NFWa], [1e-10 , rho_NFW(Rmax_NFWa, M0, rho0, c=10000)], linestyle='--', color='C9')
