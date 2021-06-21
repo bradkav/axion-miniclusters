@@ -11,6 +11,7 @@ import argparse
 import sys
 
 import dirs
+import params
 
 from matplotlib import pyplot as plt
 
@@ -30,6 +31,7 @@ def getOptions(args=sys.argv[1:]):
 options = getOptions(sys.argv[1:])
 
 SAVE_OUTPUT = True
+ID_STR = "_ma_400mueV"
 VERBOSE = False
 
 a0 = options.semi_major_axis*1e3           # semi-major axis, conversion to pc  
@@ -64,7 +66,7 @@ N_disrupt = 0
 
 # These are all the intrinsic parameters of the AMC
 # ---------------------------------------------------------------- 
-M_list, delta_list = PB.sample_AMCs_logflat(m_a = 2e-5, n_samples = N_AMC) 
+M_list, delta_list = PB.sample_AMCs_logflat(m_a = params.m_a, n_samples = N_AMC) 
 # ---------------------------------------------------------------- 
 # here we need the parameters of the orbits a and e
 a_list = np.ones(N_AMC)*a0 
@@ -266,6 +268,6 @@ else:
 
 Results = np.column_stack([M_list_initial, R_list_initial, delta_list_initial, M_list_final, R_list_final, delta_list_final, e_list, psi_list])
 if (SAVE_OUTPUT):
-    np.savetxt(dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial overdensity delta,  M final [Msun], R final [pc], Final overdensity delta, eccentricity, psi [rad]")
-    np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Ntotal_list)
-    np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_true_a=%.2f_%s%s.txt'% (a0/1e3, profile, ecc_str), Nenc_list)
+    np.savetxt(dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial overdensity delta,  M final [Msun], R final [pc], Final overdensity delta, eccentricity, psi [rad]")
+    np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Ntotal_list)
+    np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_true_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Nenc_list)

@@ -19,6 +19,8 @@ import os
 import re
 import mass_function
 
+import params
+
 #print(NE.__file__)
 
 ###
@@ -57,7 +59,7 @@ vrel   = vrel0*cs/pc # relative velocity in pc/s
 u_dispersion = 1.e-11 # velocity dispersion in pc/s
 
 
-ma     = 2e-5*1e-9   # axion mass in GeV
+ma     = params.m_a*1e-9   # axion mass in GeV
 maHz   = ma/hbar        # axion mass in GHz
 
 
@@ -71,10 +73,10 @@ M_cut  = 1.0e-29
 
 #This mass corresponds roughly to an axion decay 
 #constant of 3e11 and a confinement scale of Lambda = 0.076
-in_maeV   = 20e-6        # axion mass in eV
+in_maeV   = maeV        # axion mass in eV
 in_gg     = -0.7        
 
-IDstr = "_wStripping"
+IDstr = "_ma_400mueV"
 
 print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
 

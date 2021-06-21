@@ -21,6 +21,8 @@ import os
 import re
 import warnings
 
+import params
+
 #sys.path.append("../")
 import dirs
 if not os.path.exists(dirs.data_dir + "distributions/"):
@@ -50,7 +52,7 @@ warnings.filterwarnings('error')
 
 #This mass corresponds roughly to an axion decay 
 #constant of 3e11 and a confinement scale of Lambda = 0.076
-in_maeV   = 20e-6        # axion mass in eV
+in_maeV   = params.m_a        # axion mass in eV
 in_gg     = -0.7        
 
 print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
@@ -96,7 +98,7 @@ elif (PROFILE == "NFW"):
 
 M_cut = 1e-29
 
-IDstr = "_wStripping"
+IDstr = "_ma_400mueV"
 
 
 Nbins_mass   = 300
@@ -156,13 +158,13 @@ def main():
     a_grid = None
     if (MPI_rank == 0):
         # Gather the list of files to be used, then loop over semi-major axis a
-        ff1 = glob.glob(dirs.montecarlo_dir + 'AMC_logflat_*' + PROFILE + circ_text +  '.txt')
+        ff1 = glob.glob(dirs.montecarlo_dir + 'AMC_logflat_*' + PROFILE + circ_text + IDstr + '.txt')
         a_grid = np.zeros(len(ff1))
         print(dirs.montecarlo_dir)
 
         for i, fname in enumerate(ff1):
             #print(fname)
-            m = re.search('AMC_logflat_a=(.+?)_' + PROFILE + circ_text + '.txt', fname)
+            m = re.search('AMC_logflat_a=(.+?)_' + PROFILE + circ_text + IDstr +'.txt', fname)
             if m:
               a_string = m.group(1)
             a_grid[i]  = float(a_string)*1.e3       # conversion to pc
@@ -261,7 +263,7 @@ def main():
         # Save the outputs
         if not UNPERTURBED:
             #np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
-            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + IDstr +'.txt', np.column_stack([a_grid, psurv_a_list, psurv_a_AScut_list]),
+            if not CIRCULAR: np.savetxt(dirs.data_dir  +'SurvivalProbability_a_' + PROFILE + IDstr + '.txt', np.column_stack([a_grid, psurv_a_list, psurv_a_AScut_list]),
                               delimiter=', ', header="Columns: semi-major axis [pc], survival probability, survival probability for AMCs passing the AS cut")
             np.savetxt(dirs.data_dir +'SurvivalProbability_R_' + PROFILE + circ_text + IDstr + '.txt', np.column_stack([R_centres, psurv_R_list, P_r_weights, P_r_weights_surv, P_r_weights_masscut, P_r_weights_AScut, P_r_weights_AScut_masscut]),
                                delimiter=', ', header="Columns: galactocentric radius [pc], survival probability, Initial AMC density [Msun/pc^3], Surviving AMC density [Msun/pc^3], Surviving AMC density with mass-loss < 90% [Msun/pc^3], Surviving AMC density with R_AMC > R_AS [Msun/pc^3], Surviving AMC density with R_AMC > R_AS *AND* mass-loss < 90% [Msun/pc^3]")                
@@ -338,7 +340,7 @@ def load_AMC_results(Rlist):
     print(R_vals)
     
     for i, Rkpc in enumerate(R_vals):
-        fname = dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text)
+        fname = dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s%s.txt'%(Rkpc, PROFILE, circ_text, IDstr)
         
         columns = (3,4) #FIXME: Need to edit this if I've removed delta from the output files...
         if (UNPERTURBED):
