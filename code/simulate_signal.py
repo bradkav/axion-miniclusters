@@ -109,16 +109,17 @@ parser = argparse.ArgumentParser(description='...')
 parser.add_argument('-profile','--profile', help='Density profile for AMCs - `NFW` or `PL`', type=str, default="PL")
 parser.add_argument('-unperturbed', '--unperturbed', help='Calculate for unperturbed profiles?', type=int, default=0)
 parser.add_argument("-AScut", "--AScut", dest="AScut", action = 'store_true', help="Include an axion star cut on the AMC properties.")
+parser.add_argument("-circ", "--circ", dest="circ", action = 'store_true', help="Enforce circular orbits.")
 parser.add_argument('-Ne', '--Ne', help="Number of signal events to simulate.", type=float, default=1e7)
 parser.set_defaults(AScut=False)
-
+parser.set_defaults(circ=False)
 
 args = parser.parse_args()
 if (args.unperturbed <= 0):
     UNPERTURBED = False
 else: 
     UNPERTURBED = True
-    
+                    
 Ne = int(args.Ne)
     
 PROFILE = args.profile
@@ -135,12 +136,18 @@ if (PROFILE == "PL" or UNPERTURBED == True):
 elif (PROFILE == "NFW"):
     AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
 
+CIRC = args.circ
+circ_text = ""
+if (CIRC):
+    circ_text = "_circ"
+
+                    
 plt_path = "../plots/"
 dist_path = dirs.data_dir+"distributions/"
 
 #Load in survival probabilities
 #a_surv_file = abs_path+"SurvivalProbability_a_" + PROFILE + ".txt" #List of survival probabilities
-R_surv_file = dirs.data_dir+"SurvivalProbability_R_" + PROFILE + IDstr + ".txt" #List of survival probabilities
+R_surv_file = dirs.data_dir+"SurvivalProbability_R_" + PROFILE + circ_text + IDstr + ".txt" #List of survival probabilities
 #a_list, psurv_a_list = np.loadtxt(a_surv_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 R_list, psurv_R_list = np.loadtxt(R_surv_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 
@@ -149,7 +156,7 @@ R_list, psurv_R_list = np.loadtxt(R_surv_file, delimiter =',', dtype='f8', useco
 if (UNPERTURBED):
     encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "_circ%s_unperturbed%s.txt"%(cut_text,IDstr) #List of encounter rates
 else:
-    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "%s%s.txt"%(cut_text,IDstr) #List of encounter rates
+    encounter_file =  dirs.data_dir+"EncounterRate_" + PROFILE + "%s%s%s.txt"%(circ_text,cut_text,IDstr) #List of encounter rates
 R_list, dGammadR_list = np.loadtxt(encounter_file, delimiter =',', dtype='f8', usecols=(0,1), unpack=True)
 dGammadR_list *= f_AMC
 
@@ -192,13 +199,13 @@ else:
         
         
         try:
-            distRX, distRY, distRC = np.loadtxt(dist_path + 'distribution_radius_%.2f_%s%s%s.txt'%(R_kpc, PROFILE, cut_text, IDstr), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
+            distRX, distRY, distRC = np.loadtxt(dist_path + 'distribution_radius_%.2f_%s%s%s%s.txt'%(R_kpc, PROFILE, circ_text, cut_text, IDstr), delimiter =', ', dtype='f8', usecols=(0,1,2), unpack=True)
             #distDX, distDY = np.loadtxt(dist_path + 'distribution_rho_%.2f_%s.txt'%(R_kpc, PROFILE), delimiter =', ', dtype='f8', usecols=(0,1), unpack=True)
     
             dist_r_list.append(distRX)
             dict_interp_r[i] = interpolate.interp1d(distRX, distRY) # Radius distribution
             dict_interp_r_corr[i] = interpolate.interp1d(distRX, distRC) # Corrected radius distr 
-            distMX, distMY = np.loadtxt(dist_path + 'distribution_mass_%.2f_%s%s%s.txt'%(R_kpc, PROFILE, cut_text, IDstr), delimiter =', ', unpack=True)
+            distMX, distMY = np.loadtxt(dist_path + 'distribution_mass_%.2f_%s%s%s%s.txt'%(R_kpc, PROFILE, circ_text, cut_text, IDstr), delimiter =', ', unpack=True)
             dict_interp_mass[i] = interpolate.interp1d(distMX, distMY, bounds_error=False, fill_value=0.0)
         
         except:
@@ -358,7 +365,7 @@ pert_text = ''
 if (UNPERTURBED):
     pert_text = '_unperturbed'
 
-int_file = dirs.data_dir + 'Interaction_params_%s%s%s%s.txt.gz'%(PROFILE, cut_text, pert_text,IDstr)
+int_file = dirs.data_dir + 'Interaction_params_%s%s%s%s%s.txt.gz'%(PROFILE, circ_text, cut_text, pert_text,IDstr)
     
 print("Outputting to file:", int_file)
 

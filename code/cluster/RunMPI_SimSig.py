@@ -13,7 +13,7 @@ rank = comm.Get_rank()
 
 #Directory where the calc files are located
 myDir = "/home/kavanagh/AMC/code/"
-cmd = "cd "+myDir+" ; python3 simulate_signal.py"
+cmd = "cd "+myDir+" ; python3 simulate_signal.py -Ne 1e5 "
 
 if (rank in [0,4]):
     cmd += " -profile PL -unperturbed 0"

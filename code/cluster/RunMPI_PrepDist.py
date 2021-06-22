@@ -38,10 +38,13 @@ if (rank in [5, 11]):
     cmd += " -profile NFW -unperturbed 1 -circ"
 
 if (rank < 6):
-    cmd += ' -max_rows 100000 -AScut'
+    cmd += ' -max_rows 10000 -AScut'
 else:
-    cmd += ' -max_rows 100000'
-    
-if (rank in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
+    cmd += ' -max_rows 10000'
+
+if (rank in [0, 3, 6, 9]):
+#if (rank in [1, 2, 4, 5, 7, 8, 10, 11]):
     sts = call(cmd,shell=True)
+#if (rank in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
+#    sts = call(cmd,shell=True)
 comm.Barrier()

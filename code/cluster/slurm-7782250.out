@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/var/spool/slurm/slurmd/job7782250/slurm_script", line 2, in <module>
+    from mpi4py import MPI
+ImportError: No module named mpi4py

@@ -13,7 +13,7 @@
 #SBATCH -e /home/kavanagh/AMC/slurm_output/slurm-%j.err # STDERR
 
 
-cd $HOME/AMC/cluster
+cd $HOME/AMC/code/cluster
 
 #module load openmpi/gnu
 #module load python/2.7.9
@@ -42,7 +42,7 @@ elif [ $1 -eq 4 ]; then
     RMAX=50.0
 fi
 
-time mpirun -np 16 python2.7 RunMPI_AMC.py -N_AMC $NAMC -R_ini $RMIN -R_fin $RMAX -profile $2 -circ
+time mpirun -np 16 python2.7 RunMPI_AMC.py -N_AMC $NAMC -R_ini $RMIN -R_fin $RMAX -profile $2
 #time mpirun -np 16 python2.7 RunMPI_AMC.py -N_AMC $NAMC -R_ini 0.48 -R_fin 2.13 -profile $2
 #time mpirun -np 16 python2.7 RunMPI_AMC.py -N_AMC $NAMC -R_ini 2.35 -R_fin 10.32 -profile $2
 #time mpirun -np 16 python2.7 RunMPI_AMC.py -N_AMC $NAMC -R_ini 11.39 -R_fin 50.0 -profile $2
