@@ -106,7 +106,7 @@ Nbins_radius = 500 #Previously 500
 
 #How much smaller than the local DM density
 #do we care about?
-k = 1e-1
+k = params.min_enhancement
 
 #Define AS cut
 def r_AS(M_AMC):

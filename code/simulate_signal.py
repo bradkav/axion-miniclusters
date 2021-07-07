@@ -1,22 +1,16 @@
 #!/usr/bin/env python3
 import numpy as np
-import matplotlib.pyplot as plt
-import scipy.stats as stats
-import scipy.integrate as integrate
-import scipy.special as special
-from scipy.special import erf
+
 from scipy import interpolate
-from scipy import linspace
-import AMC
+
 import NSencounter as NE
 import perturbations as PB
-import orbits
-import glob
+
 from tqdm import tqdm
 import argparse
-import sys
+
 import os
-import re
+
 import mass_function
 
 import params
@@ -65,7 +59,7 @@ maHz   = ma/hbar        # axion mass in GHz
 
 bandwidth0 = vrel0**2/(2.*np.pi)*maHz*1.e9 # Bandwidth in Hz
 maeV   = ma*1.e9        # axion mass in eV
-min_enhancement = 1e-1    #Threshold for 'interesting' encounters (k = 10% of the local DM density)
+min_enhancement = params.min_enhancement    #Threshold for 'interesting' encounters (k = 10% of the local DM density)
 
 f_AMC = 1.0 #Fraction of Dark Matter in the form of axion miniclusters
 
@@ -356,8 +350,23 @@ for k in tqdm(range(Ne)):
     mean_flux = np.trapz(Signal_interaction, tarray)/Tenc[k]
     interaction_params = [s0[k], lG[k], bG[k], Tenc[k], mean_flux, MC_rho[k], MC_r[k]]
     Interactions.append(interaction_params)
+    # SJW version
+    interaction_params_SJW = [
+        s0[k],
+        lG[k],
+        bG[k],
+        MC_rho[k],
+        MC_r[k],
+        b[k],
+        Prd[k],
+        Bfld[k],
+        theta[k],
+        ut[k],
+    ]
+    Interactions_SJW.append(interaction_params_SJW)
 
 Interactions = np.array(Interactions)
+Interactions_SJW = np.array(Interactions_SJW)
 #print(Interactions, Interactions.shape)
 
 
@@ -366,8 +375,20 @@ if (UNPERTURBED):
     pert_text = '_unperturbed'
 
 int_file = dirs.data_dir + 'Interaction_params_%s%s%s%s%s.txt.gz'%(PROFILE, circ_text, cut_text, pert_text,IDstr)
+int_file = dirs.data_dir + 'Interaction_params_SJW_%s%s%s%s%s.txt.gz'%(PROFILE, circ_text, cut_text, pert_text,IDstr)
     
 print("Outputting to file:", int_file)
 
-np.savetxt(int_file, Interactions,
-        header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], Length of encounter [s], Mean Flux [muJy], MC density [Msun/pc^3], MC radius [pc]", fmt='%.5e')
+np.savetxt(
+    int_file, 
+    Interactions,
+    header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], Length of encounter [s], Mean Flux [muJy], MC density [Msun/pc^3], MC radius [pc]", 
+    fmt='%.5e'
+)
+
+np.savetxt(
+    int_file,
+    Interactions_SJW,
+    header="Distance [pc], Galactic Longitude [deg], Galactic Latitude [deg], MC density [Msun/pc^3], MC radius [pc], Impact parameter [pc], Period [s], Bfield [Gauss], Viewing Angle [rad], Relative velocity [pc/s]",
+    fmt="%.5e",
+)
