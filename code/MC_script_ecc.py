@@ -31,7 +31,7 @@ def getOptions(args=sys.argv[1:]):
 options = getOptions(sys.argv[1:])
 
 SAVE_OUTPUT = True
-ID_STR = "_ma_400mueV"
+ID_STR = "_ma_480mueV"
 VERBOSE = False
 
 a0 = options.semi_major_axis*1e3           # semi-major axis, conversion to pc  

@@ -98,8 +98,8 @@ elif (PROFILE == "NFW"):
 
 M_cut = 1e-29
 
+#IDstr = "_ma_306mueV"
 IDstr = "_ma_400mueV"
-
 
 Nbins_mass   = 300
 Nbins_radius = 500 #Previously 500
