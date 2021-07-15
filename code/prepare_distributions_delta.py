@@ -109,7 +109,7 @@ if (PROFILE == "NFW" and UNPERTURBED == False):
 
 M_cut = 1e-29
 
-IDstr = "_ma_70mueV"
+IDstr = "_ma_57mueV"
 IDstr += "_delta_" + MASS_CHOICE.lower()
 
 
