@@ -13,7 +13,7 @@ frac_AScut_PL = 0.0002719
 
 #IDstr = "_gamma-0.5"
 #IDstr = ""
-IDstr = "_wStripping"
+IDstr = "_ma_400mueV"
 
 #To-Do - make the correction for the initial range of samples masses more concrete
 
