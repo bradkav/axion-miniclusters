@@ -21,19 +21,19 @@ rank_temp = args.index
 
 #Directory where the calc files are located
 myDir = "/home/kavanagh/AMC/code/"
-cmd = "cd "+myDir+" ; python3 prepare_distributions.py"
+cmd = "cd "+myDir+" ; python3 prepare_distributions_delta.py"
 
 if (rank in [0, 6]):
-    cmd += " -profile PL"
+    cmd += " -profile PL -mass_choice a"
 if (rank in [1, 7]):
-    cmd += " -profile PL -circ"
+    cmd += " -profile PL -mass_choice c"
 if (rank in [2, 8]):
     cmd += " -profile PL -unperturbed 1 -circ"
     
 if (rank in [3, 9]):
-    cmd += " -profile NFW"
+    cmd += " -profile NFW -mass_choice a"
 if (rank in [4, 10]):
-    cmd += " -profile NFW -circ"
+    cmd += " -profile NFW -mass_choice c"
 if (rank in [5, 11]):
     cmd += " -profile NFW -unperturbed 1 -circ"
 
@@ -42,7 +42,7 @@ if (rank < 6):
 else:
     cmd += ' -max_rows 10000'
 
-if (rank in [0, 3, 6, 9]):
+if (rank in [0, 1, 3, 4, 6, 7, 9, 10]):
 #if (rank in [1, 2, 4, 5, 7, 8, 10, 11]):
     sts = call(cmd,shell=True)
 #if (rank in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]):
