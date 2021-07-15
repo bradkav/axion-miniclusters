@@ -11,9 +11,9 @@ root_dir = '../../data/'
 frac_AScut_NFW = 0.0146239
 frac_AScut_PL = 0.0002719
 
-#IDstr = "_gamma-0.5"
-#IDstr = ""
-IDstr = "_ma_400mueV"
+#IDstr = "_ma_400mueV"
+IDstr = "_ma_306mueV"
+#IDstr = "_wStripping"
 
 #To-Do - make the correction for the initial range of samples masses more concrete
 

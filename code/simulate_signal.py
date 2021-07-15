@@ -70,6 +70,7 @@ M_cut  = 1.0e-29
 in_maeV   = maeV        # axion mass in eV
 in_gg     = -0.7        
 
+#IDstr = "_ma_306mueV"
 IDstr = "_ma_400mueV"
 
 print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
@@ -225,6 +226,7 @@ print("Gamma = ", GammaTot, "s^-1 [for f_AMC = 1]")
 #BJK: This still needs lots of cleaning up! A lot of this may be left-over useless stuff.
 
 Interactions = []
+Interactions_SJW = []
 
 Prd   = np.random.lognormal(Pm, Ps, Ne) # Period of the NS in s^-1
 Bfld  = np.random.lognormal(Bm, Bs, Ne) # B field of NS in gauss
