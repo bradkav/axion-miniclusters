@@ -36,6 +36,9 @@ def P_delta(delta):
     
     return Pdelta*A/(1 + (delta/deltaF)**S)
 
+def calc_Mchar(m_a):
+    return 6.6e-12*(m_a/5e-5)**(-1/2)
+
 def calc_Mmin(m_a):
     #Minimum AMC mass in Msun
     #m_a - axion mass in eV
@@ -59,7 +62,8 @@ def calc_Mmax(m_a):
     #m_a - axion mass in eV  
 
     # M0 is found in Eq.34 in 1808.01879 
-    M0 = 6.6e-12*(m_a/5e-5)**(-1/2)
+    #M0 = 6.6e-12*(m_a/5e-5)**(-1/2)
+    M0 = calc_Mchar(m_a)
 
     # M_max is Eq.22 in 1707.03310 at z=0
     return 4.9e6*M0
