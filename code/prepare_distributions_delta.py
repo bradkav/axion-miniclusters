@@ -101,15 +101,15 @@ if (PROFILE == "NFW" and UNPERTURBED == False):
     M0 = mass_after_stripping(M0)
 
 #Mass function
-#if (PROFILE == "PL" or UNPERTURBED == True):
-#    AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
-#elif (PROFILE == "NFW"):
-#    AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+if (PROFILE == "PL" or UNPERTURBED == True):
+    AMC_MF = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
+elif (PROFILE == "NFW"):
+    AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
     
 
 M_cut = 1e-29
 
-IDstr = "_ma_70mueV"
+IDstr = "_ma_57mueV"
 IDstr += "_delta_" + MASS_CHOICE.lower()
 
 
@@ -352,7 +352,7 @@ def load_AMC_results(Rlist):
     print(R_vals)
     
     for i, Rkpc in enumerate(R_vals):
-        fname = dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s%s.txt'%(Rkpc, PROFILE, circ_text, IDstr)
+        fname = dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s.txt'%(Rkpc, PROFILE, circ_text)
         
         columns = (3,4) #FIXME: Need to edit this if I've removed delta from the output files...
         if (UNPERTURBED):
@@ -512,7 +512,8 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius):
 
     weights_survived = weights*np.atleast_2d((mass >= M_cut)).T
     weights_masscut = weights*np.atleast_2d((mass >= 1e-1*mass_ini)).T
-    
+
+    mass_edges = np.geomspace(1e-6*AMC_MF.mmin, AMC_MF.mmax, num=Nbins_mass+1)
     i0 = np.digitize(M0, mass_edges)
     deltam = mass_edges[i0+1] - mass_edges[i0]
     
@@ -526,7 +527,7 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius):
     #Here, we only need to reweight by the unperturbed mass function
     #AMC_MF_unpert = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
     p_target = dPdM_ini(mass_ini)
-    p_sample = 1/(np.log(AMC_MF_unpert.mmax) - np.log(AMC_MF_unpert.mmin))
+    p_sample = 1/(np.log(AMC_MF.mmax) - np.log(AMC_MF.mmin))
     m_w = p_target/p_sample
     #m_w = p_target/np.sum(p_target)
     #BJK: Need to reweight by mass function...
