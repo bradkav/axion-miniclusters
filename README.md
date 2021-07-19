@@ -32,6 +32,25 @@ and
 ```
 Note that these commands will replace the distribution and signal sample files which are already in the repository. You can specify the `IDstr` variable hard-coded in [`code/prepare_distributions.py`](code/prepare_distributions.py) and [`code/simulate_signal.py`](code/simulate_signal.py) to add a file suffix so that the old files are not overwritten.
 
+**Setting different parameters:** Inevitably, you'll want to specify different parameters to the simulations, as well as differentiating between different simulations. The file [`code/params.py`](code/params.py) allows you to do this relatively straight-forwardly. At the moment, it allows you to specify:
+- The axion mass `m_a`  
+- The minimum density enhancement `k` to consider inside axion miniclusters (that is, encounters for which the AMC internal density does not exceed the smooth Galactic background density by at least a factor `k` will be ignore)  
+- An identification string, which will be used to save output files: `IDstr`.
+
+### Generating quick results with delta-function mass functions
+
+As of July 2021, new scripts have been added for preparing distributions and simulating signals for *delta-function mass functions of AMCs* - [`code/prepare_distributions_delta.py`](code/prepare_distributions_delta.py) and [`code/simulate_signal_delta.py`](code/simulate_signal_delta.py). These scripts accept the flag `-mass_choice` with `-mass_choice c` fixing the AMC mass to be equal to the characteristic AMC mass `M_0` and `-mass_choice a` fixing the AMC mass to be equal to the mean AMC mass, given a power-law mass function. The files which are output by these scripts will have filenames appended with `_delta_a` or `_delta_c`, along with whatever value of `IDstr` is specified in the `params.py` file. 
+
+To run these scripts, you'll need to download the raw Monte Carlo data files mentioned above. However, you shouldn't need to re-run Monte Carlos, as the characteristic and mean AMC masses are almost always well within the range of masses which were simulated. 
+
+As a rough example of running the full pipeline in this case, you could run:
+```bash
+python3 prepare_distributions_delta.py -profile PL -mass_choice a -AScut -max_rows 10000
+python3 simulate_signal_delta.py -Ne 1e5 -profile PL -mass_choice a -AScut
+```
+This should save a list of encounters in the `data/` folder (in two different formats, depending on how you want to use them). You can also then run [`code/plotting/CalcEncounterRate.py`](code/plotting/CalcEncounterRate.py) (passing the appropriate `-IDstr` flag) to calculate the total encounter rate.
+
+
 ### Citation
 
 If you use the code or the associated data, please cite this repository and its DOI: [10.5281/zenodo.4006128](https://doi.org/10.5281/zenodo.4006128).
