@@ -98,7 +98,7 @@ elif (MASS_CHOICE.lower() == 'a'):
     M0 = AMC_MF.mavg
     
 if (PROFILE == "NFW" and UNPERTURBED == False):
-    M0 = mass_after_stripping(M0)
+    M0 = mass_function.mass_after_stripping(M0)
 
 #Mass function
 if (PROFILE == "PL" or UNPERTURBED == True):
@@ -109,7 +109,8 @@ elif (PROFILE == "NFW"):
 
 M_cut = 1e-29
 
-IDstr = "_ma_57mueV"
+#IDstr = "_ma_57mueV"
+IDstr = params.IDstr
 IDstr += "_delta_" + MASS_CHOICE.lower()
 
 
@@ -696,7 +697,7 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R):
         dPdr = dPdr/np.trapz(dPdr, rad_centre)
         
         #dGamma/dr_GC
-        integrand = n_dist*sigmau_avg/AMC_MF.mavg#rho_NFW
+        integrand = n_dist*sigmau_avg/M0#rho_NFW
 
         #rho_NFW is now applied in calculate_weights
 

@@ -71,7 +71,7 @@ in_maeV   = maeV        # axion mass in eV
 in_gg     = -0.7        
 
 #IDstr = "_ma_306mueV"
-IDstr = "_ma_400mueV"
+IDstr = params.IDstr
 
 
 print("> Using m_a = %.2e eV, gamma = %.2f"%(in_maeV, in_gg))
@@ -291,7 +291,8 @@ for l, R in enumerate(tqdm(R_sample)):
     #P_rho_given_r = lambda rho: NE.P_r_given_rho(MCrad[l], rho, mmin, mmax, gg)*dict_interp_rho[smallst](rho)/dict_interp_rad[smallst](MCrad[l])
     
     MC_rho[l] = NE.inverse_transform_sampling_log(P_rho_given_r, [rho_min, rho_max], n_samples=1, nbins=1000)
-
+    #print(rho_min, MC_rho[l])
+    
 
 psi   = np.random.uniform(-np.pi,np.pi,Ne)  # Longitude
 xi    = np.arcsin(Z_gal/R_sample)           # Latitude
@@ -327,7 +328,11 @@ elif (PROFILE == "NFW"):
     rho_s = MC_rho*(c**3/(3*NE.f_NFW(c))) #Convert mean density rhoi to AMC density
     r_cut = MC_r*np.minimum(NE.x_of_rho(rho_crit/rho_s), np.ones_like(MC_rho))
 
-    
+#Make sure everything is fine
+r_cut[r_cut < 0.0] = 0.0*r_cut[r_cut < 0.0] + MC_r[r_cut < 0.0]
+r_cut[np.isnan(r_cut)] = MC_r[np.isnan(r_cut)]
+r_cut[np.isinf(r_cut)] = MC_r[np.isinf(r_cut)]
+
 #Impact parameter
 b     = np.sqrt(np.random.uniform(0.0, r_cut**2, Ne))
 L0    = 2.0*np.sqrt(r_cut**2-b**2) # Transversed length of the NS in the AMC in pc

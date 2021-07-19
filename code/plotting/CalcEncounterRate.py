@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import os
 
+#import mass_function
+
+import argparse
+
 rc('text', usetex=True)
 rc('font', size=18)
 
@@ -11,9 +15,17 @@ root_dir = '../../data/'
 frac_AScut_NFW = 0.0146239
 frac_AScut_PL = 0.0002719
 
-#IDstr = "_gamma-0.5"
-IDstr = "_ma_480mueV"
-#IDstr = "_wStripping"
+parser = argparse.ArgumentParser(description='...')
+parser.add_argument('-IDstr','--IDstr', help='ID string', type=str, default="NONE")
+
+args = parser.parse_args()
+
+if (args.IDstr == "NONE"):
+    #IDstr = "_gamma-0.5"
+    IDstr = "_ma_19mueV_delta_a"
+    #IDstr = "_wStripping"
+else:
+    IDstr = args.IDstr
 
 #To-Do - make the correction for the initial range of samples masses more concrete
 
@@ -52,5 +64,8 @@ Rlist_NFW, PDF_R_NFW = np.loadtxt(root_dir + 'EncounterRate_NFW%s%s.txt'%(cut_te
 Gamma_PL = np.trapz(PDF_R_PL, Rlist_PL)*3600*24
 Gamma_NFW = np.trapz(PDF_R_NFW, Rlist_NFW)*3600*24
 
-print("    Gamma_PL [/day]:", Gamma_PL)
-print("    Gamma_NFW [/day]:", Gamma_NFW)
+#correction_factor =  0.0006385285062212862 
+correction_factor = 1.0
+
+print("    Gamma_PL [/day]:", Gamma_PL*correction_factor)
+print("    Gamma_NFW [/day]:", Gamma_NFW*correction_factor)
