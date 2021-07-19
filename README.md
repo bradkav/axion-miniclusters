@@ -46,7 +46,7 @@ To run these scripts, you'll need to download the raw Monte Carlo data files men
 As a rough example of running the full pipeline in this case, you could run:
 ```bash
 python3 prepare_distributions_delta.py -profile PL -mass_choice a -AScut -max_rows 10000
-python3 simulate_signal_delta.py -Ne 1e5 -profile PL -mass_choice a -AScut
+python3 simulate_signal_delta.py -profile PL -mass_choice a -AScut -Ne 1e5
 ```
 This should save a list of encounters in the `data/` folder (in two different formats, depending on how you want to use them). You can also then run [`code/plotting/CalcEncounterRate.py`](code/plotting/CalcEncounterRate.py) (passing the appropriate `-IDstr` flag) to calculate the total encounter rate.
 
