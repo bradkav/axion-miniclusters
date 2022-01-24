@@ -6,7 +6,7 @@ import os
 
 #data_dir = "/Users/bradkav/Projects/AMC_encounters/axion-miniclusters/data/"
 data_dir = "/Users/bradkav/Code/axion-miniclusters/data/"
-montecarlo_dir = "/Users/bradkav/Projects/AMC_encounters/code/AMC_montecarlo_data/"
+montecarlo_dir = "/Users/bradkav/Projects/AMC_encounters/MC_data/"
 
 if (os.environ['HOME'] == "/home/kavanagh"):
     data_dir = "/home/kavanagh/AMC/data/"

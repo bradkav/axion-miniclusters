@@ -5,8 +5,19 @@ from scipy.interpolate import interp1d, InterpolatedUnivariateSpline
 from scipy.integrate import quad
 from abc import ABC, abstractmethod, abstractproperty
 
-#def SampleAMC(n_samples):
-    
+import perturbations
+
+rho_eq = 1512.0 #Solar masses per pc^3
+
+#Add a wrapper here!!!
+
+from matplotlib import pyplot as plt
+
+def f_NFW(x):
+    return np.log(1+x) - x/(1+x)
+
+
+        
 def P_delta(delta):
     #The overdensity distribution df/d\[Delta] is defined
     #in Eq. (S39) in https://arxiv.org/abs/1906.00967.
@@ -35,6 +46,15 @@ def P_delta(delta):
     Pdelta[mask2] = B1*(C/B2 + x[mask2]/(sigma*B2))**-n
     
     return Pdelta*A/(1 + (delta/deltaF)**S)
+    
+def rho_of_delta(delta):
+    return 140*(1+delta)*delta**3*(rho_eq/2.)
+    
+#Initialise the interpolation between rho and delta
+delta_list = np.linspace(0, 1000, 10000)
+rho_list = rho_of_delta(delta_list)
+delta_of_rho_interp = interp1d(rho_list, delta_list)
+rho_of_delta_interp = interp1d(delta_list, rho_list)
 
 def calc_Mchar(m_a):
     return 6.6e-12*(m_a/5e-5)**(-1/2)
@@ -88,12 +108,24 @@ class GenericMassFunction(ABC):
     #self.mavg = 1e30
     
     @abstractmethod
+    
+    def dPdlogMdrho(self, mass, rho):
+        """
+        AMC distribution function dP/dlogMdrho = P(logM, rho)
+        """
+    
     def dPdlogM_internal(self, mass):
         """
-        Edit this halo mass function, dP/dlogM
+        Halo mass function, dP/dlogM
         Strongly recommend making this vectorized
         """
         pass
+        
+    def dPdrho(self, rho):
+        """
+        Density distribution of AMCs (marginalised over AMC masses)
+        """
+    
     
     def dPdlogM(self, mass):
         """
@@ -125,13 +157,63 @@ class GenericMassFunction(ABC):
         m_list = np.geomspace(self.mmin, self.mmax, 2000)
         P_list = self.dPdlogM(m_list)
         return np.trapz(P_list/m_list, m_list)
+        
+    def calc_mavg(self):
+        m_list = np.geomspace(self.mmin, self.mmax, 2000)
+        P_list = self.dPdlogM(m_list)
+        return np.trapz(P_list, m_list)
+        
+        
+    #Sample logflat masses for the AMCs
+    def sample_AMCs_logflat(self, n_samples=1000):
+        #First sample the masses                                                                                                                               
+        #It turns out that in this case, we can do the inverse                                                                                                 
+        #sampling analytically if we have a power law distribution                                                                                            
+        #print(M_max(m_a))
+
+        #Extend an order of magnitude above and below M_min, M_max, just in case we have to
+        #adjust these values later
+        x_list = np.random.uniform(np.log(0.1*self.mmin), np.log(10.0*self.mmax), size = n_samples)
+        #M1 = M_min(m_a)**(1+gamma)                                                                                                                           
+        #M2 = M_max(m_a)**(1+gamma)                                                                                                                            
+        #M_list = (x_list*(M2 - M1) + M1)**(1/(1+gamma))                                                                                                      
+        M_list = np.exp(x_list)
+        #Now sample delta                                                                                                                                      
+
+        #Then draw a sample of densities
+        rho_bar_list = perturbations.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
+                           nbins=1000, n_samples=n_samples)
+    
+        return M_list, rho_bar_list
+        
+    #Sample logflat masses for the AMCs
+    def sample_AMCs(self, n_samples=1000):
+        #First sample the masses                                                                                                                               
+        #It turns out that in this case, we can do the inverse                                                                                                 
+        #sampling analytically if we have a power law distribution                                                                                            
+        #print(M_max(m_a))
+
+        #First, draw the densities of the AMCs
+        rho_bar_list = perturbations.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
+                           nbins=1000, n_samples=n_samples, logarithmic=True)
+
+        #Then draw the masses from the marginal distribution
+        M_list = np.zeros(n_samples)
+        for i in range(n_samples):
+            pdf = lambda M: self.dPdlogMdrho(M, rho_bar_list[i])/M
+            M_list[i] = perturbations.inverse_transform_sampling(pdf, [self.mmin, self.mmax], \
+                           nbins=1000, n_samples=1, logarithmic=True)
+        
+        
+
+        return M_list, rho_bar_list
     
 
 
 #-------------------------------------------------------------------
 class PowerLawMassFunction(GenericMassFunction):
     
-    def __init__(self, m_a, gamma):
+    def __init__(self, m_a, gamma, profile="PL"):
         
         #These parameters are specific to the model we use
         self.gamma = gamma
@@ -142,7 +224,25 @@ class PowerLawMassFunction(GenericMassFunction):
         
         #Here, we generally need the average mass *before* any disruption, so let's calculate this
         #before we do any correction for stripping due to the MW halo
-        self.mavg = ((gamma)/(gamma + 1))*(self.mmax**(gamma + 1) - self.mmin**(gamma+1))/(self.mmax**gamma - self.mmin**gamma)    
+        self.mavg = ((gamma)/(gamma + 1))*(self.mmax**(gamma + 1) - self.mmin**(gamma+1))/(self.mmax**gamma - self.mmin**gamma)
+        
+        #BJK: Deal here with the different definitions of rho for different profiles! 
+        self.density_conversion = 1.0 #= <rho>/rho_AMC
+        if (profile == "NFW"):
+            c = 100
+            self.density_conversion = (3*f_NFW(c)/c**3)
+        
+        if (profile == "NFWd"):
+            c = 1000
+            self.density_conversion = (3*f_NFW(c)/c**3)*(1.0/0.58)
+        
+        if (profile == "NFWc10000"):
+            c = 10000
+            self.density_conversion = (3*f_NFW(c)/c**3)
+            
+        self.rhomin = rho_of_delta(0.1)*self.density_conversion
+        self.rhomax = rho_of_delta(20.0)*self.density_conversion
+        
         
     def dPdlogM_internal(self, mass):
         """
@@ -151,38 +251,73 @@ class PowerLawMassFunction(GenericMassFunction):
         """
         return self.gamma*mass**self.gamma/(self.mmax**self.gamma-self.mmin**self.gamma)
 
+    def dPdrho(self, rho):
+        """
+        Edit this (initial) density distribution, dP/drho
+        """
+        delta = delta_of_rho_interp(rho/self.density_conversion)
+        drhoddelta = 140*(rho_eq/2.0)*(delta**3 + 3*(1+delta)*delta**2)
+        return P_delta(delta)/drhoddelta/self.density_conversion
         
-    
 
-#------------------------------------------------------------------
-class StrippedPowerLawMassFunction(GenericMassFunction):
+        
+    def dPdlogMdrho(self, mass, rho):
+        """
+        Edit this joint PDF P(logM,rho)
+        """
+        return self.dPdlogM(mass)*self.dPdrho(rho)
+        
     
-    def __init__(self, m_a, gamma):
+#--------------------------------
         
-        #These parameters are specific to the model we use
-        self.gamma = gamma
-        self.m_a = m_a
+class ExampleMassFunction(GenericMassFunction):
+    
+    def __init__(self):
         
-        #Here 'us' denotes 'unstripped', i.e. the values before MW stripping has been accounted for
-        self.mmin_us = calc_Mmin(m_a)
-        self.mmax_us = calc_Mmax(m_a)
+        #We might in general define some parameters specific to the model we're using, 
+        #but here we don't have any...
+        #self.gamma = gamma
+        #self.m_a = m_a
         
-        #Here, we generally need the average mass *before* any disruption, so let's calculate this
-        #before we do any correction for stripping due to the MW halo
-        self.mavg = ((gamma)/(gamma + 1))*(self.mmax_us**(gamma + 1) - self.mmin_us**(gamma+1))/(self.mmax_us**gamma - self.mmin_us**gamma)
+        self.mmin = 1e-15 #Msun
+        self.mmax = 1e-5 #Msun
         
-        mi_list = np.geomspace(self.mmin_us, self.mmax_us, 10000)
-        mf_list = mass_after_stripping(mi_list)
+        self.rhomin = 1e1 #Msun/pc**3 
+        self.rhomax = 1e5 #Msun/pc**3
         
-        self.mmin = np.min(mf_list)
-        self.mmax = np.max(mf_list)
-        #print("M_max:", self.mmax)
+        mlist = np.geomspace(self.mmin, self.mmax, 1000)
+        rholist = np.linspace(self.rhomin, self.rhomax, 500)
         
-        self.mi_of_mf = InterpolatedUnivariateSpline(mf_list, mi_list, k=1, ext=1)
-        self.dmi_by_dmf = self.mi_of_mf.derivative(n=1)
+        mgrid, rhogrid = np.meshgrid(mlist, rholist)
+        dPdlogMdrho_grid = self.dPdlogMdrho(mgrid, rhogrid)
+        dPdlogM_list = np.trapz(dPdlogMdrho_grid, rholist, axis=0)
+        #print(dPdlogM_list.shape)
+        self.dPdlogM_interp = interp1d(mlist, dPdlogM_list, bounds_error=False, fill_value = 0.0)
+    
+        """
+        for rho1 in rholist:
+            print(np.trapz(self.dPdlogMdrho(mlist, rho1)/(self.dPdrho(rho1)*mlist), mlist))
+    
+        print(np.trapz(self.dPdrho(rholist), rholist))
+    
+        print("Checking norm (1):", np.trapz(dPdlogM_list/mlist, mlist))
+        print("Checking norm (2):", self.calc_norm())
+        plt.figure()
         
-    def dPdlogM_nostripping(self, mass):
-        return self.gamma*mass**self.gamma/(self.mmax_us**self.gamma-self.mmin_us**self.gamma)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.contourf(rhogrid, mgrid, dPdlogMdrho_grid/mgrid)
+        plt.plot(rholist, 1e-10*(rholist/1e3), 'k--')
+        
+        plt.figure()
+        
+        plt.loglog(mlist, dPdlogM_list/mlist)
+        
+        plt.show()
+        """
+        
+        self.mavg = self.calc_mavg()
+        
         
         
     def dPdlogM_internal(self, mass):
@@ -190,7 +325,22 @@ class StrippedPowerLawMassFunction(GenericMassFunction):
         Edit this halo mass function, dP/dlogM
         Strongly recommend making this vectorized
         """
-        m_f = mass
-        m_i = self.mi_of_mf(m_f)
+        return self.dPdlogM_interp(mass)
+
+    def dPdrho(self, rho):
+        """
+        Edit this (initial) density distribution, dP/drho
+        """
+        return rho*0.0 + 1/(self.rhomax - self.rhomin)
         
-        return self.dPdlogM_nostripping(m_i)*self.dmi_by_dmf(m_f)*m_f/m_i
+    def dPdlogMdrho(self, mass, rho):
+        """
+        Edit this joint PDF P(logM,rho)
+        """
+        sigma = 1e-10
+        M0 = 1e-10*(rho/1e3)
+        return (2*np.pi*sigma**2)**-0.5*mass*np.exp(-0.5*(mass-M0)**2/sigma**2)*self.dPdrho(rho)
+        
+    
+
+#------------------------------------------------------------------

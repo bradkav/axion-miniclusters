@@ -1,42 +1,28 @@
 import numpy as np
 import MilkyWay as MW
 import mass_function
-G    = 4.32275e-3       # (km/s)^2 pc/Msun
-G_pc = G*1.05026504e-27 # (pc/s)^2 pc/Msun
+
 from scipy.interpolate import interp1d
 from scipy.integrate import quad
 
 import dirs
 
-#Sample logflat masses for the AMCs
-def sample_AMCs_logflat(m_a = 2e-5, n_samples=1000):
-        #First sample the masses                                                                                                                               
-    #It turns out that in this case, we can do the inverse                                                                                                 
-    #sampling analytically if we have a power law distribution                                                                                            
-    #print(M_max(m_a))
+G    = 4.32275e-3       # (km/s)^2 pc/Msun
+G_pc = G*1.05026504e-27 # (pc/s)^2 pc/Msun
 
-    #Extend an order of magnitude above and below M_min, M_max, just in case we have to
-    #adjust these values later
-    x_list = np.random.uniform(np.log(0.1*mass_function.calc_Mmin(m_a)), np.log(10.0*mass_function.calc_Mmax(m_a)), size = n_samples)
-    #M1 = M_min(m_a)**(1+gamma)                                                                                                                           
-    #M2 = M_max(m_a)**(1+gamma)                                                                                                                            
-    #M_list = (x_list*(M2 - M1) + M1)**(1/(1+gamma))                                                                                                      
-    M_list = np.exp(x_list)
-    #Now sample delta                                                                                                                                      
-
-    delta_list = inverse_transform_sampling(mass_function.P_delta, [0.1, 20], \
-                       nbins=1000, n_samples=n_samples)
-    return M_list, delta_list
     
 
-def inverse_transform_sampling(function, x_range, nbins=1000, n_samples=1000):
-    bins = np.linspace(x_range[0], x_range[-1], num=nbins)
+def inverse_transform_sampling(function, x_range, nbins=1000, n_samples=1000, logarithmic=False):
+    if (logarithmic):
+        bins = np.geomspace(x_range[0], x_range[-1], num=nbins)
+    else:
+        bins = np.linspace(x_range[0], x_range[-1], num=nbins)
     pdf = function(np.delete(bins,-1) + np.diff(bins)/2)
     Norm = np.sum(pdf*np.diff(bins))
     pdf /= Norm
-    cum_values = np.zeros(bins.shape)
-    cum_values[1:] = np.cumsum(pdf*np.diff(bins))
-    inv_cdf = interp1d(cum_values, bins)
+    cumul_values = np.zeros(bins.shape)
+    cumul_values[1:] = np.cumsum(pdf*np.diff(bins))
+    inv_cdf = interp1d(cumul_values, bins)
     r = np.random.rand(n_samples)
     return inv_cdf(r)
 
