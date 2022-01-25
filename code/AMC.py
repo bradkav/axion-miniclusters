@@ -145,7 +145,7 @@ class AMC:
             try:
                 if (profile not in alpha_sq_dict.keys()):
                     #alpha_sq, beta, kappa, dE_threshold, dM_interp, fej_interp, fub_interp  = load_generic_AMC_properties(profile)
-                    print("> Loading profile:", profile)
+                    #print("> Loading profile:", profile)
                     load_generic_AMC_properties(profile)
                     
                 self.alpha_sq = alpha_sq_dict[profile]

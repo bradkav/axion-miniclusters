@@ -41,15 +41,16 @@ warnings.filterwarnings('error')
 parser = argparse.ArgumentParser(description='...')
 
 parser.add_argument('-profile','--profile', help='Density profile for AMCs - `NFW` or `PL`', type=str, default="PL")
-parser.add_argument('-unperturbed', '--unperturbed', help='Calculate for unperturbed profiles?', type=bool, default=False)
 parser.add_argument('-max_rows', '--max_rows', help='Maximum number of rows to read from each file?', type = int, default=None)
 parser.add_argument("-circ", "--circular", dest="circular", action='store_true', help="Use the circular flag to force e = 0 for all orbits.")
 parser.add_argument("-AScut", "--AScut", dest="AScut", action = 'store_true', help="Include an axion star cut on the AMC properties.")
+parser.add_argument("-unperturbed", "--unperturbed", dest="unperturbed", action= 'store_true', help='Calculate for unperturbed profiles?')
 parser.add_argument("-IDstr", "--IDstr", type=str, help = "ID string to label the output files.", default="")
 
 
 parser.set_defaults(AScut=False)
 parser.set_defaults(circular=False)
+parser.set_defaults(unperturbed=False)
 
 args = parser.parse_args()
 UNPERTURBED = args.unperturbed
@@ -167,7 +168,7 @@ def main():
 
     for i in R_indices:
         R = R_centres[i]
-        print(i,"\t - R [pc]:", R)
+        print(i," - R [pc]:", R)
         if (UNPERTURBED):
             weights = AMC_weights
         else:
@@ -494,17 +495,21 @@ def calc_distributions(R, mass_ini, mass, radius_ini, radius, weights_R):
         sigma_u = np.sqrt(2)*PB.sigma(R)*(3.24078e-14) #pc/s
         M_NS = 1.4
         R_cut = G_N*M_NS/sigma_u**2
+        
          
-        sigmau_corr = np.sqrt(8*np.pi)*sigma_u*radius_list**2*(1.+R_cut/radius_list)*np.minimum(x_cut**2, np.ones_like(radius_list))
+        sigmau_corr = np.sqrt(8*np.pi)*sigma_u*rad_centre**2*(1.+R_cut/rad_centre)#*np.minimum(x_cut**2, np.ones_like(rad_centre))
+        #sigmau_corr = np.sqrt(8*np.pi)*sigma_u*radius_list**2*(1.+R_cut/radius_list)*np.minimum(x_cut**2, np.ones_like(radius_list))
             
         if not AS_CUT:
             dPdr, _ = np.histogram(radius_list, rad_edges, weights=weights_R, density=True)
-            dPdr_corr, _ = np.histogram(radius_list, rad_edges, weights=weights_R*sigmau_corr, density=True)
+            #dPdr_corr, _ = np.histogram(radius_list, rad_edges, weights=weights_R*sigmau_corr, density=True)
+            dPdr_corr = dPdr*sigmau_corr
         else:
             mask = radius > R_AS(mass_ini)
             if (np.sum(mask) > 0):
                 dPdr, _ = np.histogram(radius_list[mask], rad_edges, weights=weights_R, density=True)
-                dPdr_corr, _ = np.histogram(radius_list[mask], rad_edges, weights=weights_R*sigmau_corr[mask], density=True)
+                #dPdr_corr, _ = np.histogram(radius_list[mask], rad_edges, weights=weights_R*sigmau_corr[mask], density=True)
+                dPdr_corr = dPdr*sigmau_corr
          
          
         n_dist = NE.nNS_sph(R)   # NS distribution at R in pc^-3

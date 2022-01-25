@@ -9,7 +9,6 @@ import perturbations
 
 rho_eq = 1512.0 #Solar masses per pc^3
 
-#Add a wrapper here!!!
 
 from matplotlib import pyplot as plt
 
@@ -166,19 +165,12 @@ class GenericMassFunction(ABC):
         
     #Sample logflat masses for the AMCs
     def sample_AMCs_logflat(self, n_samples=1000):
-        #First sample the masses                                                                                                                               
-        #It turns out that in this case, we can do the inverse                                                                                                 
-        #sampling analytically if we have a power law distribution                                                                                            
-        #print(M_max(m_a))
-
+        #First sample the masses                                                                                                                          
+        
         #Extend an order of magnitude above and below M_min, M_max, just in case we have to
         #adjust these values later
-        x_list = np.random.uniform(np.log(0.1*self.mmin), np.log(10.0*self.mmax), size = n_samples)
-        #M1 = M_min(m_a)**(1+gamma)                                                                                                                           
-        #M2 = M_max(m_a)**(1+gamma)                                                                                                                            
-        #M_list = (x_list*(M2 - M1) + M1)**(1/(1+gamma))                                                                                                      
-        M_list = np.exp(x_list)
-        #Now sample delta                                                                                                                                      
+        x_list = np.random.uniform(np.log(0.1*self.mmin), np.log(10.0*self.mmax), size = n_samples)                                                                                                  
+        M_list = np.exp(x_list)                                                                                                                              
 
         #Then draw a sample of densities
         rho_bar_list = perturbations.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
@@ -189,9 +181,6 @@ class GenericMassFunction(ABC):
     #Sample logflat masses for the AMCs
     def sample_AMCs(self, n_samples=1000):
         #First sample the masses                                                                                                                               
-        #It turns out that in this case, we can do the inverse                                                                                                 
-        #sampling analytically if we have a power law distribution                                                                                            
-        #print(M_max(m_a))
 
         #First, draw the densities of the AMCs
         rho_bar_list = perturbations.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
@@ -203,7 +192,6 @@ class GenericMassFunction(ABC):
             pdf = lambda M: self.dPdlogMdrho(M, rho_bar_list[i])/M
             M_list[i] = perturbations.inverse_transform_sampling(pdf, [self.mmin, self.mmax], \
                            nbins=1000, n_samples=1, logarithmic=True)
-        
         
 
         return M_list, rho_bar_list

@@ -18,30 +18,6 @@ profile = args.profile
 
 AS_CUT = False
 
-#Code for procedurally escaping latex characters (such as underscores...)
-def tex_escape(text):
-    """
-        :param text: a plain text message
-        :return: the message escaped to appear correctly in LaTeX
-    """
-    conv = {
-        '&': r'\&',
-        '%': r'\%',
-        '$': r'\$',
-        '#': r'\#',
-        '_': r'\_',
-        '{': r'\{',
-        '}': r'\}',
-        '~': r'\textasciitilde{}',
-        '^': r'\^{}',
-        '\\': r'\textbackslash{}',
-        '<': r'\textless{}',
-        '>': r'\textgreater{}',
-    }
-    regex = re.compile('|'.join(re.escape(str(key)) for key in sorted(conv.keys(), key = lambda item: - len(item))))
-    return regex.sub(lambda match: conv[match.group()], text)
-
-
 
 #------ Plot survival probability (as a function of a) --------------------
 
@@ -65,7 +41,7 @@ plt.gca().tick_params(axis='x', pad=10)
 
 plt.xlabel('Galactocentric semi-major axis $a$ [kpc]')
 plt.ylabel('Survival Probability')
-plt.title(tex_escape(profile))
+plt.title(profile)
 #plt.legend(loc = 'upper left' , fontsize=14)
 
 #plt.savefig('../../plots/SurvivalProbability_a' + IDstr + '.pdf', bbox_inches='tight')
@@ -100,7 +76,7 @@ plt.gca().tick_params(axis='x', pad=10)
 plt.xlabel('Galactocentric radius $r$ [kpc]')
 plt.ylabel('Survival Probability')
 #plt.legend(loc = 'lower right' , fontsize=12)
-plt.title(tex_escape(profile))
+plt.title(profile)
 
 #plt.savefig('../../plots/SurvivalProbability_R' + IDstr + '.pdf', bbox_inches='tight')
 
@@ -138,7 +114,7 @@ plt.xlabel('Galactocentric radius $r$ [kpc]')
 plt.ylabel('Encounter rate $\mathrm{d}\Gamma/\mathrm{d}r$ [kpc$^{-1}$ s$^{-1}$]')
 #plt.legend(loc = 'upper left' , fontsize=15)
 
-plt.title(tex_escape(profile))
+plt.title(profile)
 
 #plt.savefig('../../plots/EncounterRate%s%s.pdf'%(cut_text,IDstr), bbox_inches='tight')
 

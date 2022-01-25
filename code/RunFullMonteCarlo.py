@@ -12,11 +12,11 @@ import MC_script_ecc
 
 
 N_AMC = 100
-profile = "NFW_test"
+profile = "test"
 IDstr = ""
 circular = False
 
 a_list = np.geomspace(0.1, 50)
 
-for i, a in enumerate(tqdm(a_list), desc="Perturbing miniclusters"):
+for i, a in enumerate(tqdm(a_list, desc="Perturbing miniclusters")):
     MC_script_ecc.Run_AMC_MonteCarlo(a, N_AMC, profile, IDstr, circular)

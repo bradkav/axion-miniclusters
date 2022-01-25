@@ -91,8 +91,8 @@ ax1.set_ylim(1e-12, 10)
 # counts, edges, patches = ax2.hist(R_f, bins=np.geomspace(1e-8, 1e0, 50), alpha=a_hist, density=True)
 # ax2.step(edges[1:], counts, color='C1', alpha=a_plot)
 # ax2.plot(R_f_true[P_R_f_true>0.0], P_R_f_true[P_R_f_true>0.0], label='After Disruption', ls='--')
-ax2.plot(R_f[P_R_f>1e-30], R_f[P_R_f>1e-30]*P_R_f[P_R_f>1e-30], color=cafter)
-ax2.plot(R_i[P_R_i>1e-30], R_i[P_R_i>1e-30]*P_R_i[P_R_i>1e-30], ls='--', color=cbefore)
+ax2.plot(R_f[P_R_f>1e-30], R_f[P_R_f>1e-30]*P_R_f[P_R_f>1e-30], color=cafter, label='Final')
+ax2.plot(R_i[P_R_i>1e-30], R_i[P_R_i>1e-30]*P_R_i[P_R_i>1e-30], ls='--', color=cbefore, label='Initial')
 
 # ax2.hist(R_i, alpha = a_plot, bins=np.geomspace(1e-9, 1e-3, 50))
 # ax2.hist(R_f, alpha = a_plot, bins=np.geomspace(1e-9, 1e-3, 50))
@@ -102,6 +102,7 @@ ax2.set_yscale('log')
 ax2.set_xscale('log')
 ax2.set_xlabel(r"$R_\mathrm{AMC}$ $[\mathrm{pc}]$")
 ax2.set_ylabel(r"$R_\mathrm{AMC} \times P(R_\mathrm{AMC})$")
+ax2.legend(loc='best')
 
 
 

@@ -31,8 +31,9 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular):
 
     #Specify the mass function for the AMCs
     #ACTION: Specify mass function
-    #MF = mass_function.ExampleMassFunction()
-    MF = mass_function.PowerLawMassFunction(m_a = 2e-5, gamma=-0.7, profile="NFW")
+    
+    #MF = mass_function.ExampleMassFunction()      #This is a completely made up (slightly more complicated) mass function
+    MF = mass_function.PowerLawMassFunction(m_a = 2e-5, gamma=-0.7, profile="NFW") #This corresponds to one of the mass function we use in the paper
 
     # Perturber parameters
     Mp = 1.0*MW.M_star_avg
