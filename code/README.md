@@ -10,7 +10,7 @@ In `code/dirs.py`, change the `data_dir` variable to point to the `data` directo
 
 **2. Calculate the AMC response functions**
 
-Specify the internal AMC density profile in the jupyter notebook `Distribution_generic.ipynb`. Then run the whole notebook. This will calculate some internal properties of the AMC and determine the response of the AMC to perturbations. These are output to a few files (`data/AMC_parameters_XXX.txt` and `data/Perturbations_XXX.txt`, where XXX is the label for the profile) At the moment, the code only supports a single, universal shape of density profile for the AMCs. 
+Specify the internal AMC density profile in the jupyter notebook `Distribution_generic.ipynb`. Then run the whole notebook. This will calculate some internal properties of the AMC and determine the response of the AMC to perturbations. These are output to a few files (`data/AMC_parameters_XXX.txt` and `data/Perturbations_XXX.txt`, where XXX is the label for the profile). At the moment, the code only supports a single, universal shape of density profile for the AMCs. 
 
 **3. Specify the AMC mass function**
 
@@ -49,7 +49,7 @@ This plots the survival probability as a function of GC radius, and plots the ma
 #### Caveats
 
 - So far, I haven't reliably implemented any kind of axion star cut (as in the papers)
-- At the moment, the AMC masses are sampled according to their true mass function. This may not be very useful when you have a very steep mass function (as the tail is undersampled). In previous versions of the code, we sampled the masses log-flat and then reweighted the Monte Carlo samples. This hasn't been implemented yet, as I'm still double-checking that the approach generalises completely.
+- At the moment, the AMC masses are sampled according to their true mass function. This may not be very useful when you have a very steep mass function (as the tail is undersampled). In previous versions of the code, we sampled the masses log-flat and then reweighted the Monte Carlo samples. This hasn't been implemented yet, as I'm still double-checking that the approach generalises completely. One possibility would be to sample from `P(logM, rho)` rather than `P(M, rho)` as I do now.
 - In the calculation of the encounter rate in `prepare_distributions.py`, there's no cut on the minimum density enhancement (i.e. the calculation counts all encounters, even if they only given tiny density enhancements compared to the local smooth component).
 - I haven't generalised the AMC-NS signal generation component yet.
 

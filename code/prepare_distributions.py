@@ -105,12 +105,12 @@ def main():
     a_grid = None
 
     # Gather the list of files to be used, then loop over semi-major axis a
-    ff1 = glob.glob(dirs.montecarlo_dir + 'AMC_logflat_*' + PROFILE + circ_text + IDstr + '.txt')
+    ff1 = glob.glob(dirs.montecarlo_dir + 'AMC_*' + PROFILE + circ_text + IDstr + '.txt')
     a_grid = np.zeros(len(ff1))
 
     for i, fname in enumerate(ff1):
         #print(fname)
-        m = re.search('AMC_logflat_a=(.+?)_' + PROFILE + circ_text + IDstr +'.txt', fname)
+        m = re.search('AMC_a=(.+?)_' + PROFILE + circ_text + IDstr +'.txt', fname)
         if m:
           a_string = m.group(1)
         a_grid[i]  = float(a_string)*1.e3       # conversion to pc
@@ -217,7 +217,7 @@ def load_AMC_results(Rlist):
     R_vals = 1.0*Rkpc_list
     
     for i, Rkpc in enumerate(R_vals):
-        fname = dirs.montecarlo_dir + 'AMC_logflat_a=%.2f_%s%s%s.txt'%(Rkpc, PROFILE, circ_text, IDstr)
+        fname = dirs.montecarlo_dir + 'AMC_a=%.2f_%s%s%s.txt'%(Rkpc, PROFILE, circ_text, IDstr)
         
         columns = (3,4) #FIXME: Need to edit this if I've removed delta from the output files...
         if (UNPERTURBED):
