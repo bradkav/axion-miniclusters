@@ -112,6 +112,7 @@ class GenericMassFunction(ABC):
         """
         AMC distribution function dP/dlogMdrho = P(logM, rho)
         """
+        pass
     
     def dPdlogM_internal(self, mass):
         """
@@ -124,6 +125,7 @@ class GenericMassFunction(ABC):
         """
         Density distribution of AMCs (marginalised over AMC masses)
         """
+        pass
     
     
     def dPdlogM(self, mass):
@@ -247,7 +249,6 @@ class PowerLawMassFunction(GenericMassFunction):
         drhoddelta = 140*(rho_eq/2.0)*(delta**3 + 3*(1+delta)*delta**2)
         return P_delta(delta)/drhoddelta/self.density_conversion
         
-
         
     def dPdlogMdrho(self, mass, rho):
         """

@@ -53,6 +53,12 @@ This plots the survival probability as a function of GC radius, and plots the ma
 - In the calculation of the encounter rate in `prepare_distributions.py`, there's no cut on the minimum density enhancement (i.e. the calculation counts all encounters, even if they only given tiny density enhancements compared to the local smooth component).
 - I haven't generalised the AMC-NS signal generation component yet.
 
+**To-Do:**
+
+- Implement a reweighting scheme so that we can sample from (e.g.) a log-flat mass distribution and then recover the correct final distribution after disruption.  
+- Look at generating a range of 'AMC response' functions with different values of the concentration `c`. 
+- Look at extracting the smooth mass fraction (rather than just the survival probability) from the outputs.
+
 #### Units
 
 In general, masses are in `Msun`, distances in `pc` and occasionally, just to confuse things, speeds are in `km/s`.

@@ -16,7 +16,7 @@ profile = "test"
 IDstr = ""
 circular = False
 
-a_list = np.geomspace(0.1, 50)
+a_list = np.geomspace(0.1, 50, 50) #kpc
 
 for i, a in enumerate(tqdm(a_list, desc="Perturbing miniclusters")):
     MC_script_ecc.Run_AMC_MonteCarlo(a, N_AMC, profile, IDstr, circular)

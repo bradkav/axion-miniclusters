@@ -27,7 +27,7 @@ VERBOSE = False
 
 #This script can also be run stand-alone, with command-line arguments defined at the bottom of this file, using the `getOptions` function
 
-def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular):
+def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
 
     #Specify the mass function for the AMCs
     #ACTION: Specify mass function
@@ -263,7 +263,7 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular):
 
     Results = np.column_stack([M_list_initial, R_list_initial, rho_list_initial, M_list_final, R_list_final, rho_list_final, e_list, psi_list])
     if (SAVE_OUTPUT):
-        np.savetxt(dirs.montecarlo_dir + 'AMC_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial mean density rho [Msun/pc^3],  M final [Msun], R final [pc], Final mean density rho [Msun/pc^3], eccentricity, psi [rad]")
+        np.savetxt(dirs.montecarlo_dir + 'AMC_samples_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial mean density rho [Msun/pc^3],  M final [Msun], R final [pc], Final mean density rho [Msun/pc^3], eccentricity, psi [rad]")
         np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Ntotal_list)
         np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_true_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Nenc_list)
 

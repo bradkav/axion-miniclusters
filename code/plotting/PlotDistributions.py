@@ -37,12 +37,6 @@ R_i, P_R_i = np.loadtxt(dist_dir + "distribution_radius_" + profile + "_unpertur
 R_f, P_R_f = np.loadtxt(dist_dir + "distribution_radius_" + Rstr + "_" +  profile + "%s%s.txt"%(cut_text,IDstr), unpack=True, delimiter=',', usecols=(0,1))
 
 
-N_i = np.sum([M_i > 1e-25])
-N_f = np.sum([M_f > 1e-25])
-
-p_surv = N_f/N_i
-
-print("Survival probability:", p_surv)
 a_plot = 0.7
 a_hist = 0.4
 xpad=8
@@ -72,7 +66,7 @@ ax1.plot(M_f[P_M_f>1e-30], M_f[P_M_f>1e-30]*P_M_f[P_M_f>1e-30], color=cafter)
 ax1.plot(M_i, M_i*P_M_i, color=cbefore, linestyle='--')
 
 
-ax1.text(0.55, 0.9, "$r_\\mathrm{GC} = " + Rstr + "\\,\\mathrm{kpc}$\n$p_\\mathrm{surv} = %.2f$"%(p_surv,),transform=ax1.transAxes, ha='left', va='top')
+ax1.text(0.55, 0.9, "$r_\\mathrm{GC} = " + Rstr + "\\,\\mathrm{kpc}$",transform=ax1.transAxes, ha='left', va='top')
 ax1.xaxis.set_tick_params(pad=xpad)
 ax1.set_yscale('log')
 ax1.set_xscale('log')
