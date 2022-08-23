@@ -1,3 +1,0 @@
-# axion-miniclusters
-
-## Distributions
