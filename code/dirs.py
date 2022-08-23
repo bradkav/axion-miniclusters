@@ -8,6 +8,8 @@ import os
 data_dir = "/Users/bradkav/Code/axion-miniclusters/data/"
 montecarlo_dir = "/Users/bradkav/Projects/AMC_encounters/MC_data/"
 
+NS_data = "/Users/bradkav/Dropbox/Projects/AxionRadio_GBT/NS_data/"
+
 if (os.environ['HOME'] == "/home/kavanagh"):
     data_dir = "/home/kavanagh/AMC/data/"
     montecarlo_dir =  "/home/kavanagh/AMC/AMC_montecarlo_data/"

@@ -3,10 +3,11 @@
 import numpy as np
 #import matplotlib.pyplot as plt
 import AMC
-import MilkyWay as MW
 import perturbations as PB
 import mass_function
 import orbits
+
+
 
 try:
     from tqdm import tqdm
@@ -25,6 +26,16 @@ from matplotlib import pyplot as plt
 SAVE_OUTPUT = True
 VERBOSE = False
 
+#galaxy_ID = "MW"
+galaxy_ID = "M31"
+
+if (galaxy_ID == "MW"):
+    import MilkyWay as Galaxy
+else:
+    import Andromeda as Galaxy
+
+print(Galaxy.rho_star(R=1, Z=0))
+
 #This script can also be run stand-alone, with command-line arguments defined at the bottom of this file, using the `getOptions` function
 
 def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
@@ -33,17 +44,17 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
     #ACTION: Specify mass function
     
     #MF = mass_function.ExampleMassFunction()      #This is a completely made up (slightly more complicated) mass function
-    MF = mass_function.PowerLawMassFunction(m_a = 2e-5, gamma=-0.7, profile="NFW") #This corresponds to one of the mass function we use in the paper
+    MF = mass_function.PowerLawMassFunction(m_a = params.m_a, gamma=-0.7, profile=profile) #This corresponds to one of the mass function we use in the paper
 
     # Perturber parameters
-    Mp = 1.0*MW.M_star_avg
+    Mp = 1.0*Galaxy.M_star_avg
     a0 *= 1e3 #Get semi-major axis in parsec
  
     # Here we calculate the number of AMCs in the
     # We need to sample the number of AMCs in bins of a given radius
     Tage = 4.26e17
 
-    sig_rel = np.sqrt(2)*PB.sigma(a0)
+    sig_rel = np.sqrt(2)*Galaxy.sigma(a0)
     #print(sig_rel)
 
     R_bins = np.linspace(0.1*1e3,100*1e3,10)
@@ -60,12 +71,24 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
 
     N_disrupt = 0
 
+
+    delta0 = 3
     # These are all the intrinsic parameters of the AMC
     # ---------------------------------------------------------------- 
-    M_list, rho_list = MF.sample_AMCs(n_samples = N_AMC) 
+    M_list, _ = MF.sample_AMCs(n_samples = N_AMC) 
+    #print("OLD:", np.mean(rho_list))
+    #M_list = np.ones(N_AMC)*1e-14*(params.m_a/50e-6)**(-0.5)
+    #M_list = np.ones(N_AMC)*5.77e-15
+    delta_list = np.random.rand(N_AMC)*2 + 1
+    rho_list = mass_function.rho_of_delta(delta_list)
+    #print("NEW:", np.mean(rho_list))
     # ---------------------------------------------------------------- 
     # here we need the parameters of the orbits a and e
     a_list = np.ones(N_AMC)*a0 
+    
+    #test_AMC = AMC.AMC(M = 1e-15*(params.m_a/50e-6)**(-0.5), rho = rho_list[0], profile=profile)
+    #test_AMC = AMC.AMC(M = 1e-15*(params.m_a/50e-6)**(-0.5), rho = rho_list[0], profile=profile)
+    #print("AMC radius:", test_AMC.R)
 
     # print(circular)
     if circular:
@@ -80,7 +103,8 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
 
     psi_list = np.random.uniform(-np.pi/2.,np.pi/2.,size = N_AMC)
 
-
+    R_i_min = 1e30
+    R_i_max = -1e30
     #for j in tqdm(range(N_AMC)):
     for j in range(N_AMC):
         if (VERBOSE):
@@ -88,6 +112,12 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
         #print(j)
         # Initialise the AMC
         minicluster = AMC.AMC(M = M_list[j], rho = rho_list[j], profile=profile)
+        
+        if (minicluster.R > R_i_max):
+            R_i_max = minicluster.R
+        if (minicluster.R < R_i_min):
+            R_i_min = minicluster.R
+        
         M_list_initial.append(minicluster.M)
         R_list_initial.append(minicluster.R)
         rho_list_initial.append(minicluster.rho)
@@ -97,15 +127,16 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
         #E_test_NFW = PB.Elist(sig_rel, 1.0, Mp, minicluster_NFW.M, Rrms2 = minicluster_NFW.Rrms2())
 
         #Calculate b_max based on a 'test' impact at b = 1 pc
-        N_cut = 1e6
+        N_cut = int(1e6)
         bmax = ((E_test/minicluster.Ebind)*N_cut)**(1./4)
         rho0 = minicluster.rho_mean()
 
     
-        orb = orbits.elliptic_orbit(a_list[j], e_list[j])
+        orb = orbits.elliptic_orbit(a_list[j], e_list[j], galaxy = galaxy_ID)
     
         #Calculate total number of encounters
-        Ntotal = min(int(N_cut),int(PB.Ntotal_ecc(Tage, bmax, orb, psi_list[j], b0=0.0))) # This needs to be checked
+        Ntotal = min(int(N_cut),int(PB.Ntotal_ecc(Tage, bmax, orb, psi_list[j], galaxy=Galaxy, b0=0.0))) # This needs to be checked
+        #print(Ntotal)
         Ntotal_list.append(Ntotal)
 
     
@@ -119,18 +150,20 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
             continue
 
         #BJK: Deal with this!?
+        #print(Ntotal, N_cut)
         if ((Ntotal == N_cut) and (profile == "PL")):
             M_list_final.append(1e-30)
             R_list_final.append(1e-30)
-            delta_list_final.append(1e-30)
+            rho_list_final.append(1e-30)
             continue
     
     
+        Nextra = 1
         #Sample properties of the stellar encounters
-        blist = PB.dPdb(bmax, Nsamples=Ntotal)
+        blist = PB.dPdb(bmax, Nsamples=Nextra*Ntotal)
         # print(a_list[j], e_list[j], psi_list[j])
-        v_amc_list, r_interaction_list = PB.dPdVamc(orb, psi_list[j], bmax, Nsamples=Ntotal)
-        Vlist = PB.dPdV(v_amc_list, PB.sigma(r_interaction_list), Nsamples=Ntotal) 
+        v_amc_list, r_interaction_list = PB.dPdVamc(orb, psi_list[j], bmax, Nsamples=Nextra*Ntotal, galaxy=Galaxy)
+        Vlist = PB.dPdV(v_amc_list, Galaxy.sigma(r_interaction_list), Nsamples=Nextra*Ntotal) 
         #print(Vlist)
 
         Vlist = np.array(Vlist)
@@ -176,7 +209,7 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
                         bmax_new = ((E_test/minicluster.Ebind)*N_cut)**(1./4)
                     
                     
-                        N_remain = min(int(N_cut),int(PB.Ntotal_ecc(T_remain, bmax_new, orb, psi_list[j], b0=0.0)))
+                        N_remain = min(int(N_cut),int(PB.Ntotal_ecc(T_remain, bmax_new, orb, psi_list[j], galaxy=Galaxy, b0=0.0)))
                         #N_remain = PB.Ntotal_ecc(T_remain, bmax, orb, psi_list[j], b0=0.0)
                         #print(T_remain, bmax, PB.Ntotal_ecc(T_remain, bmax, orb, psi_list[j], b0=0.0), N_remain)
                     
@@ -187,6 +220,7 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
                     
                         rho0 = minicluster.rho_mean()
                         #blist[(i+1):] = PB.dPdb(bmax, Nsamples=len(blist[(i+1):]))
+                        #print(bmax_new/bmax, N_remain, dT, T_remain/Tage)
                         blist[(i+1):] = blist[(i+1):]*(bmax_new/bmax)
                         bmax = bmax_new
                 i += 1         
@@ -263,10 +297,11 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
 
     Results = np.column_stack([M_list_initial, R_list_initial, rho_list_initial, M_list_final, R_list_final, rho_list_final, e_list, psi_list])
     if (SAVE_OUTPUT):
-        np.savetxt(dirs.montecarlo_dir + 'AMC_samples_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial mean density rho [Msun/pc^3],  M final [Msun], R final [pc], Final mean density rho [Msun/pc^3], eccentricity, psi [rad]")
-        np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Ntotal_list)
-        np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_true_a=%.2f_%s%s%s.txt'% (a0/1e3, profile, ecc_str, ID_STR), Nenc_list)
+        np.savetxt(dirs.montecarlo_dir + 'AMC_samples_a=%.4f_%s%s%s.txt'% (a0, profile, ecc_str, ID_STR), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial mean density rho [Msun/pc^3],  M final [Msun], R final [pc], Final mean density rho [Msun/pc^3], eccentricity, psi [rad]")
+        np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_a=%.4f_%s%s%s.txt'% (a0, profile, ecc_str, ID_STR), Ntotal_list)
+        np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_true_a=%.4f_%s%s%s.txt'% (a0, profile, ecc_str, ID_STR), Nenc_list)
 
+    #print("R_range:", R_i_min, R_i_max)
 
 def getOptions(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="Parses command.")

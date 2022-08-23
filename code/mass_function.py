@@ -49,6 +49,8 @@ def P_delta(delta):
 def rho_of_delta(delta):
     return 140*(1+delta)*delta**3*(rho_eq/2.)
     
+    #140
+    
 #Initialise the interpolation between rho and delta
 delta_list = np.linspace(0, 1000, 10000)
 rho_list = rho_of_delta(delta_list)

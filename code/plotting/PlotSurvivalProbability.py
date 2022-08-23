@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import os
 
+
 rc('text', usetex=True)
 rc('font', size=18)
 
@@ -12,7 +13,8 @@ frac_AScut_NFW = 0.0146239
 frac_AScut_PL = 0.0002719
 
 #IDstr = "_ma_400mueV"
-IDstr = "_ma_306mueV"
+#IDstr = "_ma_306mueV"
+IDstr = "_ma_41_564mueV_MW_delta_a"
 #IDstr = "_wStripping"
 
 #To-Do - make the correction for the initial range of samples masses more concrete

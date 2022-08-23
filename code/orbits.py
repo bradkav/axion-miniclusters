@@ -3,13 +3,8 @@ from scipy.interpolate import interp1d
 from scipy.optimize import brentq
 G_N = 6.67408e-11*6.7702543e-20 # pc^3 solar mass^-1 s^-2 (conversion: m^3 kg^-1 s^-2 to pc^3 solar mass^-1 s^-2)
 
-def calc_M_enc(a):
-    rho0 =  1.4e7*1e-9 # Msun pc^-3, see Table 1 in 1304.5127
-    rs   = 16.1e3      # pc
-    
-    #MW mass enclosed within radius a
-    Menc = 4*np.pi*rho0*rs**3*(np.log((rs+a)/rs) - a/(rs+a)) 
-    return Menc
+import MilkyWay
+import Andromeda
 
 #def calc_T_orb(a):
 #    Menc = calc_M_enc(a) 
@@ -18,12 +13,15 @@ def calc_M_enc(a):
 
 class elliptic_orbit:
     
-    def __init__(self, a, e):
+    def __init__(self, a, e, galaxy="MW"):
         self.a = a
         self.e = e
         
-        
-        self.M_enc = calc_M_enc(a)
+        if (galaxy == "MW"):
+            self.M_enc = MilkyWay.M_enc(a)
+        elif (galaxy == "M31"):
+            self.M_enc = Andromeda.M_enc(a)
+            
         self.T_orb = (2*np.pi)*np.sqrt(a**3/(G_N*self.M_enc))
     
         #Initialise interpolation for eccentric anomaly

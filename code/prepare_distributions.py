@@ -73,7 +73,7 @@ if (AS_CUT):
 #Specify the mass function 
 #ACTION: Specify mass function
 #AMC_MF = mass_function.ExampleMassFunction()
-AMC_MF = mass_function.PowerLawMassFunction(m_a = 2e-5, gamma=-0.7, profile="NFW")
+AMC_MF = mass_function.PowerLawMassFunction(m_a = params.m_a, gamma=-0.7, profile="NFW")
 
 
 #BJK: Define IDstr as a flag...
@@ -89,7 +89,8 @@ Nbins_radius = 500
 #k = params.min_enhancement
 
 #Axion mass in eV, only relevant for calculating the Axion Star (AS) cut
-ma_eV = 2e-5
+#ma_eV = 2e-5
+ma_eV = params.m_a
 
 #Define AS cut
 def r_AS(M_AMC):

@@ -1,5 +1,4 @@
 import numpy as np
-import MilkyWay as MW
 import mass_function
 
 from scipy.interpolate import interp1d
@@ -53,51 +52,7 @@ def dPdV(v_amc, sigma, Nsamples=1000):
     #Vlist = sig_rel*np.sqrt(np.sum(v_vec**2, axis=-1))
     return Vlist
 
-#Local circular speed
-def Vcirc(Mstar, rho):
-    # import astropy.units as u
-    # import gala.potential as gp
-    # from gala.units import galactic
-    rho0 =  1.4e7*1e-9 # Msun pc^-3, see Table 1 in 1304.5127
-    rs   = 16.1e3     # pc
-    Menc = 4*np.pi*rho0*rs**3*(np.log((rs+rho)/rs) - rho/(rs+rho))
-    # print(rho, Menc, np.sqrt(G_pc*(Mstar+Menc)/rho))
-    return np.sqrt(G_pc*(Mstar+Menc)/rho) # pc/s
 
-#Velocity dispersion at a given radius rho
-def sigma(rho):
-    rho0 =  1.4e7*1e-9 # Msun pc^-3, see Table 1 in 1304.5127
-    rs   = 16.1e3     # pc
-    Menc = 4*np.pi*rho0*rs**3*(np.log((rs+rho)/rs) - rho/(rs+rho))
-    # print(rho, Menc, np.sqrt(G_pc*(Mstar+Menc)/rho))
-    rho_clip = np.clip(rho, 1e-20, 1e20)
-    return np.sqrt(G*(Menc)/rho_clip) # km/s
-
-
-#Stellar number density in terms of galactocentric radius rho and inclination psi
-def n(M, rho, psi):
-    # import astropy.units as u
-    # import gala.potential as gp
-    # from gala.units import galactic, solarsystem, dimensionless
-    # The AMC starts with a positions defined by rho in pc
-    # Its angle out of the plane is given by psi
-    rho0 =  1.4e7*1e-9 # Msun pc^-3, see Table 1 in 1304.5127
-    rs   = 16.1e3      # pc
-    
-    #MW mass enclosed within radius rho
-    Menc = 4*np.pi*rho0*rs**3*(np.log((rs+rho)/rs) - rho/(rs+rho)) 
-    gravfactor = lambda t: np.sqrt(G_pc*(M+Menc)/rho**3)*t
-
-    # X = \rho*cos\psi*cos\gravfactor
-    # Y = \rho*sin\gravfactor
-    # R = sqrt(X**2+Y**2)
-    R = lambda t: np.sqrt((np.cos(psi)*rho*np.cos(gravfactor(t)))**2 + (rho*np.sin(gravfactor(t)))**2)
-
-    Z = lambda t: np.sin(psi)*rho*np.cos(gravfactor(t))
-
-    # n_t = lambda t: dndV_stellar(R(t), Z(t))
-    n_t = lambda t: (MW.rho_star(R(t), Z(t)))/MW.M_star_avg #BJK: divided by mass of a star to get number density
-    return n_t
 
 #Calculate perturbation energy
 def Elist(Vlist, blist, Mp, Ms, Rrms2):
@@ -109,7 +64,7 @@ def Elist(Vlist, blist, Mp, Ms, Rrms2):
 #--------- Functions for dealing with elliptic integrals----
 
 
-def n_ecc(orb, psi):
+def n_ecc(orb, psi, galaxy):
     #T = calc_T_orb(a)
 
     # X = \rho*cos\psi*cos\theta
@@ -125,7 +80,7 @@ def n_ecc(orb, psi):
         
         R = np.sqrt((r*np.cos(theta)*np.cos(psi))**2 + (r*np.sin(theta))**2)
         Z = r*np.cos(theta)*np.sin(psi)
-        return MW.rho_star(R, Z)/MW.M_star_avg
+        return galaxy.rho_star(R, Z)/galaxy.M_star_avg
     
     # R = lambda t: np.sqrt((calc_r(t, T, a, e)*np.cos(calc_theta(t, T, e))*np.cos(psi))**2
                                 #  + (calc_r(t, T, a, e)*np.sin(calc_theta(t, T, e)))**2)
@@ -135,18 +90,19 @@ def n_ecc(orb, psi):
     return n_t
 
 #BJK: Note that Vp becomes a function of time...
-def Ntotal_ecc(Tage, bmax, orb, psi, b0=0.0):
+def Ntotal_ecc(Tage, bmax, orb, psi, galaxy, b0=0.0):
     #M = calc_M_enc(a)
     #T = calc_T_orb(a)
     #M = orb.M_enc
 
-    nfunc = n_ecc(orb, psi)
+    nfunc = n_ecc(orb, psi, galaxy)
     Vp = lambda t: orb.vis_viva_t(t)
     Ntfunc = lambda t: nfunc(t)*np.pi*Vp(t)*(bmax**2 - b0**2) 
     tlist = np.linspace(0, orb.T_orb, 1000)
 
     N_orb = np.trapz(Ntfunc(tlist), x=tlist)
 
+    #print(orb.T_orb)
     return N_orb*(Tage/orb.T_orb)
 
 def sample_ecc(N):
@@ -155,11 +111,11 @@ def sample_ecc(N):
     erange = np.linspace(0,1,100)
     return inverse_transform_sampling(P_e, erange, n_samples=N)
 
-def dPdVamc(orb, psi, bmax, Nsamples, b0=0.0):
+def dPdVamc(orb, psi, bmax, Nsamples, galaxy, b0=0.0):
     
     #M = calc_M_enc(a)
     #T = calc_T_orb(a)
-    nfunc = n_ecc(orb, psi)
+    nfunc = n_ecc(orb, psi, galaxy)
     Vp = lambda t: orb.vis_viva_t(t)
     Ntfunc = lambda t: nfunc(t)*np.pi*Vp(t)*(bmax**2 - b0**2)
 

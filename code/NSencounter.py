@@ -15,9 +15,7 @@ from scipy.special import gamma as gamma_fun
 ##  NS distributions
 ##
 #Fraction of bound NS's, roughly from Table 4 of https://arxiv.org/pdf/0908.3182.pdf
-f_bound = 0.8
-N_bulge = f_bound*6.0e8
-N_disk = f_bound*4.0e8
+
 
 
 def f_NFW(x):
@@ -47,76 +45,9 @@ def x_of_rho(rho):
     return x    
 #--------------------------------------------------------------
 
-#Number densities of neutron stars
-
-#R_cyl is the cylindrical galactocentric distance
-def nNS_bulge(R_cyl, Z):
-    #Bulge distribution from McMillan, P.J. 2011, MNRAS, 414, 2446 1102.4340
-    # R_cyl and Z are cylindrical coordinates in pc
-
-    r0 = 75.             #pc ### This value has been changed from 750pc to 75pc
-    rc = 2.1e3          #pc
-    Nnorm = 1/90218880.  #pc^{-3} - normalising constant so that the distribution integrates to 1 over the whole volume
-    rp2 = R_cyl**2 + 4*Z**2
-    rp  = np.sqrt(rp2)
-    return N_bulge*Nnorm*np.exp(-rp2/rc**2)/(1+rp/r0)**(1.8)
-
-def nNS_disk(R_cyl, Z):
-    #Lorimer profile, Eq. 6 of https://arxiv.org/pdf/1805.11097.pdf
-    #Best fit parameters from Table 3 (Broken Power-Law)
-    Rsun = 8.5e3 #We use R_sun = 8.5 kpc here for consistency with the fits in 1805.11097
-    B = 3.91 
-    C = 7.54
-    Zs = 0.76e3 
-    
-    Norm = C**(B+2)/(4*np.pi*Rsun**2*Zs*np.exp(C)*gamma_fun(B+2))
-    return N_disk*Norm*(R_cyl/Rsun)**B*np.exp(-C*(R_cyl-Rsun)/Rsun)*np.exp(-np.abs(Z)/Zs)
-
-def nNS(R_cyl, Z):
-    return nNS_bulge(R_cyl, Z) + nNS_disk(R_cyl, Z)
-
-
-#Tabulate
-nNS_sph_interp = None
-
-def calcNS_sph():
-    #Galactocentric, spherical R
-    r_list = np.geomspace(1, 200e3, 10000)
-    nr_list = 0.0*r_list
-
-    for i, r in enumerate(r_list):
-        Z_list = 0.99999*np.linspace(-r, r, 1001)
-        R_list = np.sqrt(r**2 - Z_list**2)
-        nr_list[i] = (0.5/r)*np.trapz(nNS(R_list, Z_list), Z_list)
-    
-    return interp1d(r_list, nr_list, bounds_error=False, fill_value=0.0)
-
-#Galactocentric, spherical R
-def nNS_sph(R_sph):
-    global nNS_sph_interp
-    if (nNS_sph_interp is None):
-        nNS_sph_interp = calcNS_sph()
-    
-    return nNS_sph_interp(R_sph)
-
-
-#Parallelised for Z
-def dPdZ(R_sph, Z):
-    ma = R_sph**2 > Z**2 #Mask for valid values
-    R_cyl = np.sqrt(R_sph**2 - Z[ma]**2)
-    
-    result = 0.0*Z
-    result[ma] = nNS(R_cyl, Z[ma])/(2*R_sph*nNS_sph(R_sph))
-    #P(Z) = P(R_sph, Z)/P(R_sph) = (2 pi R_sph n(R_cyl, Z)/(4 pi R_sph^2 <n(R_sph)>))
-    return result
 #--------------------------------------------------------------
 
-## NFW profile for AMC distribution
-def rhoNFW(R):
-    rho0 =  1.4e7*1e-9 # Msun*pc^-3, see Table 1 in 1304.5127
-    rs = 16.1e3      # pc
-    aa = R/rs
-    return rho0/aa/(1+aa)**2
+
 
 
 #def P_r_given_rho(R, rho, mmin, mmax, gg):
@@ -138,11 +69,6 @@ def sigma_grav(R_AMC):
     ## Returns the cross section*u in pc^3/s
     return (RNS**2 + R_AMC**2)*np.sqrt(2.0*np.pi/sigma_u2)*(sigma_G2 +2.0*sigma_u2)*kmtopc
 
-def Vcirc(rho):
-    rho0 =  1.4e7*1e-9 # Msun pc^-3, see Table 1 in 1304.5127
-    rs   = 16.1e3      # pc
-    Menc = 4*np.pi*rho0*rs**3*(np.log((rs+rho)/rs) - rho/(rs+rho))
-    return np.sqrt(G_pc*Menc/rho) # pc/s
 
 def MC_profile(delta, r):
     # r is in units of the axion MC
@@ -174,7 +100,6 @@ def MC_profile_NFW(density, r):
     MSuninGeV = 1.115e57
     rho_s = density*c**3/(3*f_NFW(c))
     return rho_s*MSuninGeV/(c*r*(1+c*r)**2)
-    
     
 #Conversion radius
 def rc(theta, B0, P0, mGhz):
@@ -271,20 +196,6 @@ def signal_isotropic(Bfld, Prd, density, fa, ut, s0, r, ret_bandwidth=False, pro
         return Flux*GeV_to_J/(BWD*4.*np.pi*(s0*pc)**2*hbarT) * 1.e32, BWD
     else:
         return Flux*GeV_to_J/(BWD*4.*np.pi*(s0*pc)**2*hbarT) * 1.e32,
-
-
-#BJK: I don't think this code is used...
-def n(rho, psi):
-    # The AMC stars with a positions defined by rho in pc
-    # Its angle out of the plane is given by psi
-    rho0 =  1.4e7*1e-9 # Msun pc^-3, see Table 1 in 1304.5127
-    rs   = 16.1e3      # pc
-    Menc = 4*np.pi*rho0*rs**3*(np.log((rs+rho)/rs) - rho/(rs+rho))
-    gravfactor = lambda t: np.sqrt(G_pc*(Menc)/rho**3)*t
-    R   = lambda t: np.sqrt((np.cos(psi)*rho*np.cos(gravfactor(t)))**2 + (rho*np.sin(gravfactor(t)))**2)
-    Z   = lambda t: np.sin(psi)*rho*np.cos(gravfactor(t))
-    n_t = lambda t: nNS(R(t), Z(t))
-    return n_t
 
 
 def Gamma(nfunc, Tage, sigmav ):
