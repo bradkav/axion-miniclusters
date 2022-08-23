@@ -7,3 +7,5 @@ Interaction_params*
 Processing.ipynb
 */.DS_Store
 .DS_Store
+data/distributions/*.txt
+data/distributions/*.txt.gz
