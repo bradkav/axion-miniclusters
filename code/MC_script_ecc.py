@@ -21,30 +21,30 @@ import sys
 import dirs
 import params
 
+import MilkyWay
+import Andromeda
+
 from matplotlib import pyplot as plt
 
 SAVE_OUTPUT = True
 VERBOSE = False
 
-#galaxy_ID = "MW"
-galaxy_ID = "M31"
-
-if (galaxy_ID == "MW"):
-    import MilkyWay as Galaxy
-else:
-    import Andromeda as Galaxy
-
-print(Galaxy.rho_star(R=1, Z=0))
 
 #This script can also be run stand-alone, with command-line arguments defined at the bottom of this file, using the `getOptions` function
+def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, ID_STR, galaxyID = "MW", circular=False):
 
-def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
+    if (galaxyID == "MW"):
+        Galaxy = MilkyWay
+    elif (galaxyID == "M31"):
+        Galaxy = Andromeda
+    else:
+        raise ValueError("Invalid galaxyID.")
 
     #Specify the mass function for the AMCs
     #ACTION: Specify mass function
     
     #MF = mass_function.ExampleMassFunction()      #This is a completely made up (slightly more complicated) mass function
-    MF = mass_function.PowerLawMassFunction(m_a = params.m_a, gamma=-0.7, profile=profile) #This corresponds to one of the mass function we use in the paper
+    MF = mass_function.PowerLawMassFunction(m_a, gamma=-0.7, profile=profile) #This corresponds to one of the mass function we use in the paper
 
     # Perturber parameters
     Mp = 1.0*Galaxy.M_star_avg
@@ -70,6 +70,8 @@ def Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular=False):
     rho_list_final = []
 
     N_disrupt = 0
+    
+    #BJK: Fix mass function...
 
 
     delta0 = 3
@@ -308,8 +310,8 @@ def getOptions(args=sys.argv[1:]):
     parser.add_argument("-a", "--semi_major_axis", type=float, help="Galactocentric semi-major axis [kpc].", required = True)
     parser.add_argument("-N", "--AMC_number", type=int, help="Number of AMCs in the simulation.", default = 10000)
     parser.add_argument("-profile", "--profile", type=str, help="Density profile - `PL` or `NFW`", default="PL")
-    #parser.add_argument("-circ", "--circular", type=, help="Cirular orbits or eccentric", default=False)
-    
+    parser.add_argument("-galaxyID", "--galaxyID", type=str, help="ID of galaxy - 'MW' or 'M31'", default="MW")
+    parser.add_argument("-m_a", "--m_a", type=float, help="Axion mass in eV", default = 50e-6)
     parser.add_argument("-circ", "--circular", dest="circular", action='store_true', help="Use the circular flag to force e = 0 for all orbits.")
     parser.add_argument("-IDstr", "--IDstr", type=str, help = "ID string to label the output files.", default="")
     parser.set_defaults(circular=False)
@@ -320,10 +322,13 @@ def getOptions(args=sys.argv[1:]):
 
 if __name__ == '__main__':
     options = getOptions(sys.argv[1:])
-    ID_STR = options.IDstr
-    a0 = options.semi_major_axis           # semi-major axis, conversion to pc  
-    N_AMC = options.AMC_number
+    
+    ID_STR  = options.IDstr
+    a0      = options.semi_major_axis           # semi-major axis, conversion to pc  
+    N_AMC   = options.AMC_number
     profile = options.profile
-    circular = options.circular
+    circ    = options.circular
+    galID   = options.galaxyID
+    m_a     = options.m_a
 
-    Run_AMC_MonteCarlo(a0, N_AMC, profile, ID_STR, circular)
+    Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, ID_STR, galID, circ)

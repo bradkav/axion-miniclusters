@@ -5,7 +5,7 @@ import numpy as np
 
 
 #m_a = 33.086e-6
-m_a = 41.564e-6
+#m_a = 41.564e-6
 #m_a = 47.561e-6  # eV
 
 #m_a = 8.27e-6
