@@ -41,24 +41,7 @@ if not os.path.exists(dirs.data_dir + "distributions/"):
     os.makedirs(dirs.data_dir + "distributions/")
 
 # The code in principle is parallelised, but I wouldn't recommend it...
-USING_MPI = False
-try:
-    from mpi4py import MPI
-
-    comm = MPI.COMM_WORLD
-    MPI_size = comm.Get_size()
-    MPI_rank = comm.Get_rank()
-    if MPI_size > 1:
-        USING_MPI = True
-
-except ImportError as err:
-    print("   mpi4py module not found: using a single process only...")
-    USING_MPI = False
-    MPI_size = 1
-    MPI_rank = 0
-
-print(MPI_size, MPI_rank)
-
+USING_MPI = True
 
 warnings.filterwarnings("error")
 
@@ -188,43 +171,10 @@ print("Axion stars cut-off radius:", r_AS(M0))
 alpha_AS = r_AS(1.0)
 k_AMC = (3 / (4 * np.pi)) ** (1 / 3)
 
-# Helper for MPI stuff
-def MPI_send_chunks(data, dest, tag):
-    data_shape = data.shape
-    comm.send(data_shape, dest, tag)
-    data_flat = data.flatten()
 
-    # Split the data into N_chunks, each of maximum length 1e6
-    data_len = len(data_flat)
-    N_chunks = int(np.ceil(data_len / 1e6))
-    chunk_indices = np.array_split(np.arange(data_len), N_chunks)
-    print("Source:", data_len, N_chunks)
-
-    # Loop over the chunks and send
-    for inds in chunk_indices:
-        comm.send(data_flat[inds], dest, tag)
-
-    return None
-
-
-def MPI_recv_chunks(source, tag):
-    data_shape = comm.recv(source=source, tag=tag)
-    data_flat = np.zeros(data_shape).flatten()
-
-    # Split the data into N_chunks, each of maximum length 1e6
-    data_len = len(data_flat)
-    N_chunks = int(np.ceil(data_len / 1e6))
-    print("Dest:", data_len, N_chunks)
-    chunk_indices = np.array_split(np.arange(data_len), N_chunks)
-
-    # Loop over the chunks and send
-    for inds in chunk_indices:
-        data_flat[inds] = comm.recv(source=source, tag=tag)
-
-    data = np.reshape(data_flat, data_shape)
-
-    return data
-
+def prepare_distributions():
+    
+    
 
 def main():
 
@@ -246,10 +196,6 @@ def main():
             a_grid[i] = float(a_string) # conversion to pc
 
         a_grid = np.sort(a_grid)
-
-
-    if USING_MPI:  # Tell all processes about the list, a_grid
-        a_grid = comm.bcast(a_grid, root=0)
 
     # Edges to use for the output bins in R (galactocentric radius, pc)
     if CIRCULAR:
@@ -286,53 +232,6 @@ def main():
         )  # Just pass the eccentricities and semi major axes
 
 
-    if USING_MPI:
-        comm.barrier()
-        if MPI_rank != 0:
-
-            comm.send(mass_ini_all, dest=0, tag=(10 * MPI_rank + 1))
-            comm.send(mass_all, dest=0, tag=(10 * MPI_rank + 2))
-            comm.send(radius_all, dest=0, tag=(10 * MPI_rank + 3))
-            comm.send(a_all, dest=0, tag=(10 * MPI_rank + 4))
-            comm.send(e_all, dest=0, tag=(10 * MPI_rank + 5))
-
-            # print(AMC_weights.shape)
-            # print(sys.getsizeof(AMC_weights))
-            # comm.send(AMC_weights.shape, dest=0,tag= (10*MPI_rank+6) )
-            # print("MPI_rank : ...")
-            # comm.Send(AMC_weights, dest=0,      tag= (10*MPI_rank+7) )
-            MPI_send_chunks(AMC_weights, dest=0, tag=(10 * MPI_rank + 7))
-            MPI_send_chunks(AMC_weights_surv, dest=0, tag=(10 * MPI_rank + 9))
-            # comm.send(AMC_weights_surv, dest=0, tag= (10*MPI_rank+9) )
-            # print(MPI_rank)
-
-        # https://stackoverflow.com/questions/15833947/mpi-hangs-on-mpi-send-for-large-messages
-
-        if MPI_rank == 0:
-            for i in range(1, MPI_size):
-
-                mass_ini_tmp = comm.recv(source=i, tag=(10 * i + 1))
-                mass_tmp = comm.recv(source=i, tag=(10 * i + 2))
-                radius_tmp = comm.recv(source=i, tag=(10 * i + 3))
-                a_tmp = comm.recv(source=i, tag=(10 * i + 4))
-                e_tmp = comm.recv(source=i, tag=(10 * i + 5))
-
-                # req = comm.irecv(source=i, tag= (10*i+7) )
-                # comm.Recv(AMC_w_tmp, source=i, tag= (10*i+7) )
-                AMC_w_tmp = MPI_recv_chunks(source=i, tag=(10 * i + 7))
-
-                # AMC_w_surv_tmp = comm.recv(source=i,   tag= (10*i+9) )
-                AMC_w_surv_tmp = MPI_recv_chunks(source=i, tag=(10 * i + 9))
-
-                mass_ini_all = np.concatenate((mass_ini_all, mass_ini_tmp))
-                mass_all = np.concatenate((mass_all, mass_tmp))
-                radius_all = np.concatenate((radius_all, radius_tmp))
-                a_all = np.concatenate((a_all, a_tmp))
-                e_all = np.concatenate((e_all, e_tmp))
-                AMC_weights = np.concatenate((AMC_weights, AMC_w_tmp))
-                AMC_weights_surv = np.concatenate((AMC_weights_surv, AMC_w_surv_tmp))
-
-        comm.barrier()
 
     # quit()
 
@@ -386,13 +285,7 @@ def main():
             )
 
     PDF_list = np.zeros_like(R_centres)
-    if USING_MPI:
-        PDF_list = comm.bcast(PDF_list, root=0)
-        mass_ini_all = comm.bcast(mass_ini_all, root=0)
-        mass_all = comm.bcast(mass_all, root=0)
-        radius_all = comm.bcast(radius_all, root=0)
-        AMC_weights_surv = comm.bcast(AMC_weights_surv, root=0)
-        comm.barrier()
+
 
     R_indices = np.array_split(range(len(R_centres)), MPI_size)[MPI_rank]
 
@@ -412,39 +305,27 @@ def main():
             R, mass_ini_all[inds], mass_all[inds], radius_all[inds], weights[inds, i]
         )  # just pass the AMC weight at that radius
 
-    if USING_MPI:
-        comm.barrier()
-        if MPI_rank != 0:
-            comm.send(PDF_list, dest=0, tag=21 + MPI_rank)
 
-        if MPI_rank == 0:
-            for i in range(1, MPI_size):
-                PDF_tmp = comm.recv(source=i, tag=21 + i)
-                R_inds = np.array_split(range(len(R_centres)), MPI_size)[i]
-                PDF_list[R_inds] = PDF_tmp[R_inds]
-        comm.barrier()
+    print(R_centres)
+    #R_centres is in pc
+    print("Encounter rate [day^-1]:", np.trapz(PDF_list, R_centres) * 60 * 60 * 24)
 
-    if MPI_rank == 0:
-        print(R_centres)
-        #R_centres is in pc
-        print("Encounter rate [day^-1]:", np.trapz(PDF_list, R_centres) * 60 * 60 * 24)
+    # Save the outputs
+    # if not UNPERTURBED:
+    out_text = PROFILE + circ_text + cut_text
 
-        # Save the outputs
-        # if not UNPERTURBED:
-        out_text = PROFILE + circ_text + cut_text
-
-        if UNPERTURBED:
-            out_text += "_unperturbed"
-        out_text += IDstr_out + ".txt"
-        # if (UNPERTURBED):
-        # _unperturbed.txt"
-        # np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
-        np.savetxt(
-            dirs.data_dir + "EncounterRate_" + out_text,
-            np.column_stack([R_centres, PDF_list]),
-            delimiter=", ",
-            header="Columns: R orbit [pc], surv_prob, MC radial distrib (dGamma/dR [pc^-1 s^-1])",
-        )
+    if UNPERTURBED:
+        out_text += "_unperturbed"
+    out_text += IDstr_out + ".txt"
+    # if (UNPERTURBED):
+    # _unperturbed.txt"
+    # np.savetxt(output_dir + 'Rvals_distributions_' + PROFILE + '.txt', Rvals_distr)
+    np.savetxt(
+        dirs.data_dir + "EncounterRate_" + out_text,
+        np.column_stack([R_centres, PDF_list]),
+        delimiter=", ",
+        header="Columns: R orbit [pc], surv_prob, MC radial distrib (dGamma/dR [pc^-1 s^-1])",
+    )
 
 
 # ------------------------------
