@@ -43,7 +43,9 @@ def rhoNFW(R):
 def M_enc(r):
     rho0 = 5.0e6 * 1e-9  # Msun pc^-3, see astro-ph/0110390
     rs = 25.0e3  # pc
-    return 4 * np.pi * rho0 * rs ** 3 * (np.log((rs + r) / rs) - r / (rs + r))
+    M = 4 * np.pi * rho0 * rs ** 3 * (np.log((rs + r) / rs) - r / (rs + r))
+    M_BH = 3e7
+    return M + M_BH
 
 # Velocity dispersion at a given radius rho
 def sigma(r):
@@ -66,13 +68,15 @@ columns = ["B0", "T", "theta","t", "x", "y", "z"]
 
     
 #print("Reading XXX_3.dat...")
-NS_fname = "Population_Model_CMZ_3.dat"
-#_3.dat is the very young sample
-print("Reading " + NS_fname)
+NS_fname = "Population_Model_CMZ_2.dat"
+#Use the following line for a very young NS sample:
+#NS_fname = "Population_Model_CMZ_3.dat"
+
+#print("Reading " + NS_fname)
 data_CMZ = np.load(dirs.NS_data + NS_fname)
 CMZ_dict = {columns[i]: data_CMZ[:,i] for i in range(len(columns))}
 
-print("Fudging for Andromeda!")
+print("> Adjusting NS distributions for Andromeda!")
 for key in ["x", "y", "z"]:
     CMZ_dict[key] *= 25.0/16.1
 CMZ_dict['r'] = np.sqrt(CMZ_dict['x']**2 + CMZ_dict['y']**2 + CMZ_dict['z']**2)
@@ -87,7 +91,7 @@ P_z_CMZ, z_bins_CMZ = np.histogram(CMZ_dict['z'], bins=100, density=True)
 z_CMZ = 0.5*(z_bins_CMZ[1:] + z_bins_CMZ[:-1])
 
 
-print("Number of CMZ NSs:", N_CMZ)
+#print("Number of CMZ NSs:", N_CMZ)
 
 data_GC = np.load("../data/Population_Model__FastDecay_Androm_Long.npy")
 GC_dict = {columns[i]: data_GC[:,i] for i in range(len(columns))}

@@ -6,6 +6,7 @@ from scipy.integrate import quad
 from abc import ABC, abstractmethod, abstractproperty
 
 import perturbations
+import params
 
 rho_eq = 1512.0 #Solar masses per pc^3
 
@@ -88,6 +89,35 @@ def calc_Mmax(m_a):
 
     # M_max is Eq.22 in 1707.03310 at z=0
     return 4.9e6*M0
+
+
+def get_mass_function(ID, m_a, profile, Nbins_mass=300, unperturbed=False):
+    if (ID in ["powerlaw"]):
+        # Mass function
+        if profile == "PL":
+            AMC_MF = PowerLawMassFunction(m_a=m_a, gamma=params.gamma, profile=profile)
+        elif profile == "NFW":
+            print("> Warning: Ignoring stripping due to global tides!")
+            #BJK: May need to implement global tidal stripping...
+            AMC_MF = PowerLawMassFunction(m_a=m_a, gamma=params.gamma, profile=profile)
+            #AMC_MF = mass_function.StrippedPowerLawMassFunction(m_a=in_maeV, gamma=in_gg)
+        M0 = AMC_MF.mavg
+    
+    
+    elif (ID in ["delta_a"]):
+        MF_test = PowerLawMassFunction(m_a=m_a, gamma=params.gamma, profile=profile)
+        M0 = MF_test.mavg
+    elif (ID in ["delta_c"]):
+        M0 = calc_Mchar(in_maeV)
+    elif (ID in ["delta_p"]):
+        M0 = 1e-14*(m_a/50e-6)**(-0.5)
+    else:
+        raise ValueError("Invalid mass_fuction.")
+        
+    if (ID in ["delta_a", "delta_c", "delta_p"]):
+        AMC_MF = DeltaMassFunction(m_a=m_a, M0=M0, Nbins_mass=Nbins_mass)
+    
+    return AMC_MF, M0
 
 #Calculate the mass of a minicluster of tidal stripping from the MW:
 #Sec. 2.2 of https://arxiv.org/abs/1403.6827
@@ -188,14 +218,14 @@ class GenericMassFunction(ABC):
 
         #First, draw the densities of the AMCs
         rho_bar_list = perturbations.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
-                           nbins=1000, n_samples=n_samples, logarithmic=True)
+                           nbins=10000, n_samples=n_samples, logarithmic=True)
 
         #Then draw the masses from the marginal distribution
         M_list = np.zeros(n_samples)
         for i in range(n_samples):
             pdf = lambda M: self.dPdlogMdrho(M, rho_bar_list[i])/M
             M_list[i] = perturbations.inverse_transform_sampling(pdf, [self.mmin, self.mmax], \
-                           nbins=1000, n_samples=1, logarithmic=True)
+                           nbins=10000, n_samples=1, logarithmic=True)
         
 
         return M_list, rho_bar_list
@@ -205,7 +235,7 @@ class GenericMassFunction(ABC):
 #-------------------------------------------------------------------
 class PowerLawMassFunction(GenericMassFunction):
     
-    def __init__(self, m_a, gamma, profile="PL"):
+    def __init__(self, m_a, gamma, profile="PL", Nbins_mass=300):
         
         #These parameters are specific to the model we use
         self.gamma = gamma
@@ -214,9 +244,12 @@ class PowerLawMassFunction(GenericMassFunction):
         self.mmin = calc_Mmin(m_a)
         self.mmax = calc_Mmax(m_a)
         
+        self.type = "extended"
+        
         #Here, we generally need the average mass *before* any disruption, so let's calculate this
         #before we do any correction for stripping due to the MW halo
         self.mavg = ((gamma)/(gamma + 1))*(self.mmax**(gamma + 1) - self.mmin**(gamma+1))/(self.mmax**gamma - self.mmin**gamma)
+        self.mass_edges = np.geomspace(1e-6 * self.mmin, self.mmax, num=Nbins_mass + 1)
         
         #BJK: Deal here with the different definitions of rho for different profiles! 
         self.density_conversion = 1.0 #= <rho>/rho_AMC
@@ -259,6 +292,64 @@ class PowerLawMassFunction(GenericMassFunction):
         return self.dPdlogM(mass)*self.dPdrho(rho)
         
     
+class DeltaMassFunction(GenericMassFunction):
+    
+    def __init__(self, m_a, M0, Nbins_mass=300):
+        
+        
+        #These parameters are specific to the model we use
+        self.m_a = m_a
+        self.M0 = M0
+        
+        self.mmin = calc_Mmin(m_a)
+        self.mmax = 10*M0
+        
+        #This tells the code that it should deal with this
+        #mass function differently, because it's a delta-function
+        self.type = "delta"
+        
+        self.mass_edges = np.geomspace(1e-6 * self.mmin, self.mmax, num=(Nbins_mass + 1))
+        self.i0 = np.digitize(M0, self.mass_edges)
+        self.deltam = self.mass_edges[self.i0 + 1] - self.mass_edges[self.i0]
+        self.deltalogm = np.log(self.mass_edges[self.i0 + 1]) - np.log(self.mass_edges[self.i0])
+        
+        #Here, we generally need the average mass *before* any disruption, so let's calculate this
+        #before we do any correction for stripping due to the MW halo
+        self.mavg = M0
+            
+        self.rhomin = rho_of_delta(1)
+        self.rhomax = rho_of_delta(3)
+        
+        
+    def dPdlogM_internal(self, mass):
+        """
+        Edit this halo mass function, dP/dlogM
+        Strongly recommend making this vectorized
+        """
+        res = 0.0 * mass
+        res[np.digitize(mass, self.mass_edges) == self.i0] = 1.0 / self.deltalogm
+        return res
+
+    def dPdrho(self, rho):
+        """
+        Edit this (initial) density distribution, dP/drho
+        """
+        #Let's use a flat distribution in delta, for simplicity
+        delta_min = 1
+        delta_max = 3
+        delta = delta_of_rho_interp(rho)
+        inds = (delta > delta_min) & (delta < delta_max) 
+        P = (1/(delta_max - delta_min))*inds #Uniform distribution
+        drhoddelta = 140*(rho_eq/2.0)*(delta**3 + 3*(1+delta)*delta**2)
+        return P/drhoddelta #dP/drho = dP/ddelta/(drho/ddelta)
+        
+        
+    def dPdlogMdrho(self, mass, rho):
+        """
+        Edit this joint PDF P(logM,rho)
+        """
+        return self.dPdlogM(mass)*self.dPdrho(rho)
+
 #--------------------------------
         
 class ExampleMassFunction(GenericMassFunction):

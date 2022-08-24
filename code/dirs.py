@@ -7,6 +7,7 @@ import os
 #data_dir = "/Users/bradkav/Projects/AMC_encounters/axion-miniclusters/data/"
 data_dir = "/Users/bradkav/Code/axion-miniclusters/data/"
 montecarlo_dir = "/Users/bradkav/Projects/AMC_encounters/MC_data/"
+plot_dir = "/Users/bradkav/Code/axion-miniclusters/plots/"
 
 NS_data = "/Users/bradkav/Dropbox/Projects/AxionRadio_GBT/NS_data/"
 

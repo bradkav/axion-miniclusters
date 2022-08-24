@@ -13,20 +13,23 @@ import numpy as np
 #m_a = 35.16e-6
 
 hbar  = 6.58211957e-16
-print("Using mass [eV]:", m_a, f" (corresponding to {m_a*1e-9/(2*np.pi*hbar)} GHz)")
+#print("Using mass [eV]:", m_a, f" (corresponding to {m_a*1e-9/(2*np.pi*hbar)} GHz)")
+
+gamma = -0.7
 
 #exit()
 
 # m_a = 306e-6 #eV ( = 74 GHz)
 # m_a = 480e-6 #eV
 
-mstr1 = str(int(np.floor(m_a*1e6)))
-mstr2 = str(int(np.round((m_a*1e6 - np.floor(m_a*1e6))*1e3)))
-mstr2 = mstr2.rjust(3, "0")
-#
-#print("CHECKING IDSTR:", IDstr2)
+def get_ID_from_m_a(m_a):
+    mstr1 = str(int(np.floor(m_a*1e6)))
+    mstr2 = str(int(np.round((m_a*1e6 - np.floor(m_a*1e6))*1e3)))
+    mstr2 = mstr2.rjust(3, "0")
+    #
+    #print("CHECKING IDSTR:", IDstr2)
 
-IDstr = "_ma_" + mstr1 + "_" + mstr2 + "mueV_M31"
+    return "_ma_" + mstr1 + "_" + mstr2 + "mueV_M31"
 
 #IDstr = "_ma_33_086mueV_M31"
 #IDstr = "_ma_41_564mueV_M31"

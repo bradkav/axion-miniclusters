@@ -31,7 +31,7 @@ VERBOSE = False
 
 
 #This script can also be run stand-alone, with command-line arguments defined at the bottom of this file, using the `getOptions` function
-def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, ID_STR, galaxyID = "MW", circular=False):
+def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, mass_function_ID = "powerlaw", galaxyID = "MW", circular=False, IDstr=""):
 
     if (galaxyID == "MW"):
         Galaxy = MilkyWay
@@ -44,7 +44,10 @@ def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, ID_STR, galaxyID = "MW", circula
     #ACTION: Specify mass function
     
     #MF = mass_function.ExampleMassFunction()      #This is a completely made up (slightly more complicated) mass function
-    MF = mass_function.PowerLawMassFunction(m_a, gamma=-0.7, profile=profile) #This corresponds to one of the mass function we use in the paper
+    #MF = mass_function.PowerLawMassFunction(m_a, gamma=params.gamma, profile=profile) #This corresponds to one of the mass function we use in the paper
+    
+    #Set up the mass function
+    AMC_MF, M0 = mass_function.get_mass_function(mass_function_ID, m_a, profile)
 
     # Perturber parameters
     Mp = 1.0*Galaxy.M_star_avg
@@ -71,26 +74,12 @@ def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, ID_STR, galaxyID = "MW", circula
 
     N_disrupt = 0
     
-    #BJK: Fix mass function...
-
-
-    delta0 = 3
-    # These are all the intrinsic parameters of the AMC
     # ---------------------------------------------------------------- 
-    M_list, _ = MF.sample_AMCs(n_samples = N_AMC) 
-    #print("OLD:", np.mean(rho_list))
-    #M_list = np.ones(N_AMC)*1e-14*(params.m_a/50e-6)**(-0.5)
-    #M_list = np.ones(N_AMC)*5.77e-15
-    delta_list = np.random.rand(N_AMC)*2 + 1
-    rho_list = mass_function.rho_of_delta(delta_list)
-    #print("NEW:", np.mean(rho_list))
-    # ---------------------------------------------------------------- 
-    # here we need the parameters of the orbits a and e
-    a_list = np.ones(N_AMC)*a0 
+    M_list, rho_list = AMC_MF.sample_AMCs_logflat(n_samples = N_AMC)
     
-    #test_AMC = AMC.AMC(M = 1e-15*(params.m_a/50e-6)**(-0.5), rho = rho_list[0], profile=profile)
-    #test_AMC = AMC.AMC(M = 1e-15*(params.m_a/50e-6)**(-0.5), rho = rho_list[0], profile=profile)
-    #print("AMC radius:", test_AMC.R)
+    
+    
+    a_list = np.ones(N_AMC)*a0 
 
     # print(circular)
     if circular:
@@ -123,18 +112,19 @@ def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, ID_STR, galaxyID = "MW", circula
         M_list_initial.append(minicluster.M)
         R_list_initial.append(minicluster.R)
         rho_list_initial.append(minicluster.rho)
+        
     
         # Galactic parameters
         E_test = PB.Elist(sig_rel, 1.0, Mp, minicluster.M, Rrms2 = minicluster.Rrms2())
         #E_test_NFW = PB.Elist(sig_rel, 1.0, Mp, minicluster_NFW.M, Rrms2 = minicluster_NFW.Rrms2())
 
         #Calculate b_max based on a 'test' impact at b = 1 pc
-        N_cut = int(1e6)
+        N_cut = int(1e5)
         bmax = ((E_test/minicluster.Ebind)*N_cut)**(1./4)
         rho0 = minicluster.rho_mean()
 
     
-        orb = orbits.elliptic_orbit(a_list[j], e_list[j], galaxy = galaxy_ID)
+        orb = orbits.elliptic_orbit(a_list[j], e_list[j], galaxy = galaxyID)
     
         #Calculate total number of encounters
         Ntotal = min(int(N_cut),int(PB.Ntotal_ecc(Tage, bmax, orb, psi_list[j], galaxy=Galaxy, b0=0.0))) # This needs to be checked
@@ -293,15 +283,17 @@ def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, ID_STR, galaxyID = "MW", circula
 
     #print(circular)
     if (circular):
-        ecc_str = '_circ'
+        circ_text = '_circ'
     else:
-        ecc_str = ''
+        circ_text = ''
+        
+    file_suffix = profile + "_" + mass_function_ID + circ_text  + IDstr
 
     Results = np.column_stack([M_list_initial, R_list_initial, rho_list_initial, M_list_final, R_list_final, rho_list_final, e_list, psi_list])
     if (SAVE_OUTPUT):
-        np.savetxt(dirs.montecarlo_dir + 'AMC_samples_a=%.4f_%s%s%s.txt'% (a0, profile, ecc_str, ID_STR), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial mean density rho [Msun/pc^3],  M final [Msun], R final [pc], Final mean density rho [Msun/pc^3], eccentricity, psi [rad]")
-        np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_a=%.4f_%s%s%s.txt'% (a0, profile, ecc_str, ID_STR), Ntotal_list)
-        np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_true_a=%.4f_%s%s%s.txt'% (a0, profile, ecc_str, ID_STR), Nenc_list)
+        np.savetxt(dirs.montecarlo_dir + 'AMC_samples_a=%.4f_%s.txt'% (a0, file_suffix), Results, delimiter=', ', header="Columns: M initial [Msun], R initial [pc], Initial mean density rho [Msun/pc^3],  M final [Msun], R final [pc], Final mean density rho [Msun/pc^3], eccentricity, psi [rad]")
+        np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_a=%.4f_%s.txt'% (a0, file_suffix), Ntotal_list)
+        np.savetxt(dirs.montecarlo_dir + 'AMC_Ninteractions_true_a=%.4f_%s.txt'% (a0, file_suffix), Nenc_list)
 
     #print("R_range:", R_i_min, R_i_max)
 
@@ -312,6 +304,7 @@ def getOptions(args=sys.argv[1:]):
     parser.add_argument("-profile", "--profile", type=str, help="Density profile - `PL` or `NFW`", default="PL")
     parser.add_argument("-galaxyID", "--galaxyID", type=str, help="ID of galaxy - 'MW' or 'M31'", default="MW")
     parser.add_argument("-m_a", "--m_a", type=float, help="Axion mass in eV", default = 50e-6)
+    parser.add_argument("-MF_ID", "--mass_function_ID", help="...", type=str, default="delta_c")
     parser.add_argument("-circ", "--circular", dest="circular", action='store_true', help="Use the circular flag to force e = 0 for all orbits.")
     parser.add_argument("-IDstr", "--IDstr", type=str, help = "ID string to label the output files.", default="")
     parser.set_defaults(circular=False)
@@ -321,14 +314,6 @@ def getOptions(args=sys.argv[1:]):
 
 
 if __name__ == '__main__':
-    options = getOptions(sys.argv[1:])
+    opts = getOptions(sys.argv[1:])
     
-    ID_STR  = options.IDstr
-    a0      = options.semi_major_axis           # semi-major axis, conversion to pc  
-    N_AMC   = options.AMC_number
-    profile = options.profile
-    circ    = options.circular
-    galID   = options.galaxyID
-    m_a     = options.m_a
-
-    Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, ID_STR, galID, circ)
+    Run_AMC_MonteCarlo(opts.semi_major_axis, opts.AMC_number, opts.m_a, opts.profile, opts.MF_ID, opts.galaxyID, opts.circular, opts.IDstr)
