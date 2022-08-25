@@ -6,11 +6,13 @@
 
 The key parts of the computation are:
 * Calculation of the perturbations to individual AMCs due to stellar encounters ([`code/Distribution_PL.ipynb`](code/Distribution_PL.ipynb) and [`code/Distribution_NFW.ipynb`](code/Distribution_NFW.ipynb)) 
-* Monte Carlo simulations of the disruption of individual AMCs orbiting in the Milky Way ([`code/MC_script_ecc.py`](code/MC_script_ecc.py))  
+* Monte Carlo simulations of the disruption of individual AMCs orbiting in the Milky Way ([`code/MonteCarlo.py`](code/MonteCarlo.py))  
 * Processing and calculation of the distributions of AMC properties from the Monte Carlo results ([`code/prepare_distributions.py`](code/prepare_distributions.py))  
 * Sampling of properties of individual encounters between AMCs and neutrons stars in the Milky Way ([`code/simulate_signal.py`](code/simulate_signal.py))
 
 Scripts for generating plots from the results are in [`code/plotting/`](code/plotting). The first thing to do is to edit [`code/dirs.py`](code/dirs.py) so that the directory variables point to the right place.
+
+**An example script showing how to run the pipeline 'end-to-end' is given in [`code/RunPipeline.py`](code/RunPipeline.py).**
 
 The raw Monte Carlo results are archived online at https://doi.org/10.6084/m9.figshare.13224386.v1. Edit the file [`code/dirs.py`](code/dirs.py) to specify the directory where these Monte Carlo results are located (though the raw files are only needed if you want to re-calculate the AMC distributions).
 
