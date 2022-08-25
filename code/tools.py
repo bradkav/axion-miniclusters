@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
+from scipy.interpolate import interp1d
 
 #Generate an ID suffix which can label the filenames
 def generate_suffix(profile, mass_function_ID, circular=False, AScut=False, unperturbed=False,IDstr="", verbose=False):
@@ -27,3 +28,17 @@ def generate_suffix(profile, mass_function_ID, circular=False, AScut=False, unpe
 def r_AS(M_AMC, m_a):
     m_22 = m_a / 1e-22
     return 1e3 * (1.6 / m_22) * (M_AMC / 1e9) ** (-1 / 3)
+    
+def inverse_transform_sampling(function, x_range, nbins=1000, n_samples=1000, logarithmic=False):
+    if (logarithmic):
+        bins = np.geomspace(x_range[0], x_range[-1], num=nbins)
+    else:
+        bins = np.linspace(x_range[0], x_range[-1], num=nbins)
+    pdf = function(np.delete(bins,-1) + np.diff(bins)/2)
+    Norm = np.sum(pdf*np.diff(bins))
+    pdf /= Norm
+    cumul_values = np.zeros(bins.shape)
+    cumul_values[1:] = np.cumsum(pdf*np.diff(bins))
+    inv_cdf = interp1d(cumul_values, bins)
+    r = np.random.rand(n_samples)
+    return inv_cdf(r)

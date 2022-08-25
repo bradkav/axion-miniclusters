@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod, abstractproperty
 
 import perturbations
 import params
+import tools
 
 rho_eq = 1512.0 #Solar masses per pc^3
 
@@ -203,11 +204,11 @@ class GenericMassFunction(ABC):
         
         #Extend an order of magnitude above and below M_min, M_max, just in case we have to
         #adjust these values later
-        x_list = np.random.uniform(np.log(0.1*self.mmin), np.log(10.0*self.mmax), size = n_samples)                                                                                                  
+        x_list = np.random.uniform(np.log(self.mmin), np.log(self.mmax), size = n_samples)                                                                                                  
         M_list = np.exp(x_list)                                                                                                                              
 
         #Then draw a sample of densities
-        rho_bar_list = perturbations.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
+        rho_bar_list = tools.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
                            nbins=1000, n_samples=n_samples)
     
         return M_list, rho_bar_list
@@ -217,14 +218,14 @@ class GenericMassFunction(ABC):
         #First sample the masses                                                                                                                               
 
         #First, draw the densities of the AMCs
-        rho_bar_list = perturbations.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
+        rho_bar_list = tools.inverse_transform_sampling(self.dPdrho, [self.rhomin, self.rhomax], \
                            nbins=10000, n_samples=n_samples, logarithmic=True)
 
         #Then draw the masses from the marginal distribution
         M_list = np.zeros(n_samples)
         for i in range(n_samples):
             pdf = lambda M: self.dPdlogMdrho(M, rho_bar_list[i])/M
-            M_list[i] = perturbations.inverse_transform_sampling(pdf, [self.mmin, self.mmax], \
+            M_list[i] = tools.inverse_transform_sampling(pdf, [self.mmin, self.mmax], \
                            nbins=10000, n_samples=1, logarithmic=True)
         
 

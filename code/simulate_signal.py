@@ -180,8 +180,8 @@ def sample_encounters(Ne, m_a, profile,  mass_function_ID, galaxyID = "MW", circ
     #BJK: GOT TO HERE!!!
     Interactions = []
 
-    R_sample = NE.inverse_transform_sampling_log(
-        dGammadR, [np.min(R_list[psurv_R_list > 2e-6]), np.max(R_list)], n_samples=Ne
+    R_sample = tools.inverse_transform_sampling(
+        dGammadR, [np.min(R_list[psurv_R_list > 2e-6]), np.max(R_list)], n_samples=Ne, logarithmic=True
     )  # Galactocentric radius of interaction in pc
     R_sample = np.array(R_sample)
 
@@ -195,7 +195,7 @@ def sample_encounters(Ne, m_a, profile,  mass_function_ID, galaxyID = "MW", circ
 
         # Draw a value of z for the encounter
         dpdz = lambda Z: Galaxy.dPdZ(Z)
-        Z_gal[l] = NE.inverse_transform_sampling(dpdz, np.array([-R, R]), n_samples=1, nbins=1000)
+        Z_gal[l] = tools.inverse_transform_sampling(dpdz, np.array([-R, R]), n_samples=1, nbins=1000)
 
         Pr_check = 0
         if not unperturbed:
@@ -221,8 +221,8 @@ def sample_encounters(Ne, m_a, profile,  mass_function_ID, galaxyID = "MW", circ
         k_AMC = (3 / (4 * np.pi)) ** (1 / 3)
     
         # radius in pc
-        MC_r[l] = NE.inverse_transform_sampling_log(
-            interp_r_corr, dist_r, n_samples=1, nbins=10000
+        MC_r[l] = tools.inverse_transform_sampling(
+            interp_r_corr, dist_r, n_samples=1, nbins=10000, logarithmic=True
         )
 
         rho_max = 3 * AMC_MF.mmax / (4 * np.pi * MC_r[l] ** 3)
@@ -254,8 +254,8 @@ def sample_encounters(Ne, m_a, profile,  mass_function_ID, galaxyID = "MW", circ
             )
         # P_rho_given_r = lambda rho: NE.P_r_given_rho(MCrad[l], rho, mmin, mmax, gg)*dict_interp_rho[smallst](rho)/dict_interp_rad[smallst](MCrad[l])
 
-        MC_rho[l] = NE.inverse_transform_sampling_log(
-            P_rho_given_r, [1e-6*rho_min, rho_max], n_samples=1, nbins=100000
+        MC_rho[l] = tools.inverse_transform_sampling(
+            P_rho_given_r, [1e-6*rho_min, rho_max], n_samples=1, nbins=100000, logarithmic=True
         )
     
         if (np.isnan(MC_rho[l])):

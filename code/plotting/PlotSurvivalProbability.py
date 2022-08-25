@@ -17,26 +17,6 @@ rc('font', size=18)
 
 root_dir = dirs.data_dir
 
-parser = argparse.ArgumentParser(description='...')
-parser.add_argument('-profile','--profile', help='Density profile for AMCs - `NFW` or `PL`', type=str, default="PL")
-
-parser.add_argument(
-    "-AScut",
-    "--AScut",
-    dest="AScut",
-    action="store_true",
-    help="Include an axion star cut on the AMC properties.",
-)
-
-args = parser.parse_args()
-profile = args.profile
-
-IDstr = "_ma_8_270mueV_M31_delta_p"
-
-AS_CUT = args.AScut
-cut_text = ""
-if (AS_CUT):
-    cut_text = "_AScut"
 
 
 INCLUDE_SOLAR_RADIUS = False
@@ -93,11 +73,10 @@ def plot_psurv_r(profile, mass_function_ID,  IDstr="", circular=False, save_plot
     plt.semilogx(Rlist, psurv_R_AScut, color='k', linestyle='--', label="w/ AS cut")
     #plt.semilogx(Rlist/1.e3, psurv_R_AScut, color='k', linestyle='-')
 
-    print("p_surv at r_Sun:", np.interp(8.3, Rlist/1e3, psurv_R))
-
     if (INCLUDE_SOLAR_RADIUS):
         plt.axvline(x=8.33e3, color='gray', ls=':', zorder=0)
         plt.text(8.33e3, 0.65, r"$r_\odot$", rotation = -90, color='gray')
+        print("p_surv at r_Sun:", np.interp(8.3, Rlist/1e3, psurv_R))
     #plt.text(2.1, 0.5, r"NFW, ecc., $M_f > 10\% \,M_i$", rotation = 65, color='C8', fontsize=12, ha='center', va='center')
 
     props = dict(boxstyle='round', facecolor='white',edgecolor='white', alpha=0.9)

@@ -203,26 +203,4 @@ def Gamma(nfunc, Tage, sigmav ):
     tlist = np.geomspace(1, Tage, 1000)
     return np.trapz(Ntfunc(tlist), x=tlist)
 
-def inverse_transform_sampling_log(function, x_range, nbins=1000, n_samples=1000):
-    bins = np.geomspace(x_range[0], x_range[-1], num=nbins)
-    pdf = function(np.delete(bins,-1) + np.diff(bins)/2)
-    # Norm = np.sum(pdf*np.diff(bins))
-    Norm = np.trapz(pdf, x=np.delete(bins,-1) + np.diff(bins)/2)
-    pdf /= Norm
-    # cum_values = np.zeros(bins.shape)
-    cum_values = cumtrapz(pdf, x=np.delete(bins,-1) + np.diff(bins)/2, initial=0.0)
-    inv_cdf = interp1d(cum_values, np.delete(bins,-1) + np.diff(bins)/2)
-    r = np.random.rand(n_samples)
-    return inv_cdf(r)
-
-def inverse_transform_sampling(function, x_range, nbins=1000, n_samples=1000):
-    bins = np.linspace(x_range[0], x_range[-1], num=nbins)
-    pdf = function(np.delete(bins,-1) + np.diff(bins)/2)
-    Norm = np.trapz(pdf, x=np.delete(bins,-1) + np.diff(bins)/2)
-    pdf /= Norm
-    # cum_values = np.zeros(bins.shape)
-    cum_values = cumtrapz(pdf, x=np.delete(bins,-1) + np.diff(bins)/2, initial=0.0)
-    inv_cdf = interp1d(cum_values, np.delete(bins,-1) + np.diff(bins)/2)
-    r = np.random.rand(n_samples)
-    return inv_cdf(r)
 

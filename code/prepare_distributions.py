@@ -54,10 +54,10 @@ k_AMC = (3 / (4 * np.pi)) ** (1 / 3)
 def prepare_distributions(m_a, profile,  mass_function_ID, galaxyID = "MW", circular=False, unperturbed=False,max_rows=None,  IDstr=""):
         
     file_suffix = tools.generate_suffix(profile, mass_function_ID, circular=circular,
-                                        AScut=False, unperturbed=unperturbed, IDstr=IDstr, verbose=True)
+                                        AScut=False, unperturbed=unperturbed, IDstr=IDstr, verbose=False)
                                         
     file_suffix_AScut = tools.generate_suffix(profile, mass_function_ID, circular=circular,
-                                        AScut=True, unperturbed=unperturbed, IDstr=IDstr, verbose=True)
+                                        AScut=True, unperturbed=unperturbed, IDstr=IDstr, verbose=False)
     
     #Set up the mass function
     AMC_MF, M0 = mass_function.get_mass_function(mass_function_ID, m_a, profile, unperturbed=unperturbed, Nbins_mass=Nbins_mass)
@@ -121,15 +121,14 @@ def prepare_distributions(m_a, profile,  mass_function_ID, galaxyID = "MW", circ
         a_grid, a_all, mass_all, mass_ini_all, radius_all, AMC_MF
     )
 
-    P_r_weights = np.sum(
-        AMC_weights, axis=0
-    )  # Check if this should be a sum or integral
+    P_r_weights = np.sum(AMC_weights, axis=0)
     P_r_weights_surv = np.sum(AMC_weights_surv, axis=0)
     P_r_weights_masscut = np.sum(AMC_weights_masscut, axis=0)
     P_r_weights_AScut = np.sum(AMC_weights_AScut, axis=0)
     P_r_weights_AScut_masscut = np.sum(AMC_weights_AScut_masscut, axis=0)
 
     psurv_R_list = P_r_weights_surv / (P_r_weights + 1e-30)
+    psurv_R_list_AScut = P_r_weights_AScut/(P_r_weights + 1e-30)
 
     # Save the outputs
     if not unperturbed:
@@ -148,7 +147,7 @@ def prepare_distributions(m_a, profile,  mass_function_ID, galaxyID = "MW", circ
                 [
                     R_centres,
                     psurv_R_list,
-                    P_r_weights_AScut/P_r_weights,
+                    psurv_R_list_AScut,
                     #P_r_weights_surv,
                     #P_r_weights_masscut,
                     #P_r_weights_AScut,
@@ -172,7 +171,10 @@ def prepare_distributions(m_a, profile,  mass_function_ID, galaxyID = "MW", circ
             weights = AMC_weights
         else:
             weights = AMC_weights_surv
-            # weights = AMC_weights_AScut
+        
+            
+        
+            
         inds = weights[:, i] > 0
         # inds = np.arange(len(mass_ini_all))
 
@@ -183,7 +185,7 @@ def prepare_distributions(m_a, profile,  mass_function_ID, galaxyID = "MW", circ
         
         # Calculate distributions of R and M
         PDF_list_AScut[i] = calc_distributions(
-            R, mass_ini_all[inds], mass_all[inds], radius_all[inds], weights[inds, i], Galaxy, AMC_MF, unperturbed, True, profile, file_suffix_AScut
+            R, mass_ini_all[inds], mass_all[inds], radius_all[inds], AMC_weights_AScut[inds, i], Galaxy, AMC_MF, unperturbed, True, profile, file_suffix_AScut
         )  # just pass the AMC weight at that radius
 
     #R_centres is in pc
@@ -345,14 +347,8 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius, Galaxy,
         #print(a_grid,a[i])
         #print(np.isclose(a_grid,a[i], rtol=1e-5))
         #print(P_samp_a[np.isclose(a_grid,a[i], rtol=1e-5)])
-        P = (
-            4
-            * np.pi
-            * a[i] ** 2
-            * Galaxy.rhoNFW(a[i])
-            * correction
-            / P_s
-        )
+        P = ( 4 * np.pi * a[i] ** 2 * Galaxy.rhoNFW(a[i]) * correction / P_s )
+
         # P = 4*np.pi*a[i]**2*NE.rhoNFW(a[i])*correction/(P_samp_a[a_grid == a[i]]*N_samps)
         weights[i, :] = w * P
 
@@ -361,15 +357,18 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius, Galaxy,
     if (AMC_MF.type == "extended"):
         weights_masscut = weights * np.atleast_2d((mass >= 1e-1 * mass_ini)).T
 
-        dPdM_ini = lambda x: AMC_MF.dPdlogM(x)/x
-
+        dPdM_ini = lambda x: AMC_MF.dPdlogM(x)
         AS_mask = (r_AS(mass_ini, AMC_MF.m_a) < radius) & (mass >= M_cut)
 
+        
+        
         # Here, we only need to reweight by the unperturbed mass function
         # AMC_MF_unpert = mass_function.PowerLawMassFunction(m_a = in_maeV, gamma = in_gg)
         p_target = dPdM_ini(mass_ini)
         p_sample = 1 / (np.log(AMC_MF.mmax) - np.log(AMC_MF.mmin))
         m_w = p_target / p_sample
+        #m_w *= N_samps_tot/np.sum(m_w)
+        #m_w /= N_samps_tot
         # m_w = p_target/np.sum(p_target)
         
         weights_AScut = weights * np.atleast_2d(m_w * AS_mask).T
@@ -387,7 +386,6 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius, Galaxy,
         m_w = np.ones_like(AS_mask)
         weights_AScut = weights * np.atleast_2d(m_w * AS_mask).T
         weights_AScut_masscut = weights_AScut * np.atleast_2d((beta >= 1e-1)).T
-
 
     return (
         weights,
@@ -432,7 +430,7 @@ def calculate_survivalprobability(a_grid, a_all, m_final, m_ini, r_final, AMC_MF
             AS_mask = (r_AS(AMC_MF.M0, AMC_MF.m_a) < r_final_corr) & (m_final_corr >= M_cut)
             m_w = np.ones_like(AS_mask)
             
-        psurv_a_AScut[i] = np.sum(m_w * AS_mask) / np.sum(inds)
+        psurv_a_AScut[i] = np.sum(m_w * AS_mask) / Nsamp_a[i]
 
     return Nsurv_a / Nsamp_a, psurv_a_AScut
 
@@ -508,17 +506,6 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R, Galaxy, AMC_MF, unp
             if (np.sum(dPdM) > 0):
                 dPdM /= np.trapz(dPdM, mass_centre)
 
-            # Test plot!!!
-            
-            """
-            plt.figure()
-            
-            plt.loglog(mass_centre, dPdM)
-            plt.axvline(AMC_MF.M0, linestyle='--', color='k')
-            plt.axvline(AMC_MF.mmin, linestyle=':', color='k')
-            plt.axvline(AMC_MF.mmax, linestyle=':', color='k')
-            plt.show()
-            """
             
             np.savetxt(
                 dirs.data_dir

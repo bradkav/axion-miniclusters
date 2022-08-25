@@ -5,26 +5,12 @@ from scipy.interpolate import interp1d
 from scipy.integrate import quad
 
 import dirs
+import tools
 
 G    = 4.32275e-3       # (km/s)^2 pc/Msun
 G_pc = G*1.05026504e-27 # (pc/s)^2 pc/Msun
 
     
-
-def inverse_transform_sampling(function, x_range, nbins=1000, n_samples=1000, logarithmic=False):
-    if (logarithmic):
-        bins = np.geomspace(x_range[0], x_range[-1], num=nbins)
-    else:
-        bins = np.linspace(x_range[0], x_range[-1], num=nbins)
-    pdf = function(np.delete(bins,-1) + np.diff(bins)/2)
-    Norm = np.sum(pdf*np.diff(bins))
-    pdf /= Norm
-    cumul_values = np.zeros(bins.shape)
-    cumul_values[1:] = np.cumsum(pdf*np.diff(bins))
-    inv_cdf = interp1d(cumul_values, bins)
-    r = np.random.rand(n_samples)
-    return inv_cdf(r)
-
 #Draw impact parameters
 def dPdb(bmax, b0=0.0, Nsamples=1000):
     # b in km
@@ -109,7 +95,7 @@ def sample_ecc(N):
     elist_loaded, P_e_loaded = np.loadtxt(dirs.data_dir + 'eccentricity.txt', unpack=True, delimiter=',')
     P_e = interp1d(elist_loaded, P_e_loaded, bounds_error=False, fill_value = 0.0)
     erange = np.linspace(0,1,100)
-    return inverse_transform_sampling(P_e, erange, n_samples=N)
+    return tools.inverse_transform_sampling(P_e, erange, n_samples=N)
 
 def dPdVamc(orb, psi, bmax, Nsamples, galaxy, b0=0.0):
     
@@ -119,7 +105,7 @@ def dPdVamc(orb, psi, bmax, Nsamples, galaxy, b0=0.0):
     Vp = lambda t: orb.vis_viva_t(t)
     Ntfunc = lambda t: nfunc(t)*np.pi*Vp(t)*(bmax**2 - b0**2)
 
-    tlist = inverse_transform_sampling(Ntfunc, np.linspace(0,orb.T_orb/2,10), n_samples=Nsamples)
+    tlist = tools.inverse_transform_sampling(Ntfunc, np.linspace(0,orb.T_orb/2,10), n_samples=Nsamples)
     #rlist = calc_r(tlist, T, a, e)
     rlist = orb.r_of_t(tlist)
 

@@ -21,6 +21,7 @@ m_a = 35.16e-6
 profile = "PL"
 galaxyID = "M31"
 mass_function_ID = "delta_p"
+#mass_function_ID = "powerlaw"
             
 #---------- Calculation Parameters -------
             
