@@ -18,39 +18,20 @@ The raw Monte Carlo results are archived online at https://doi.org/10.6084/m9.fi
 
 Full samples of radio signal events due to AMC-NS encounters are archived online at https://doi.org/10.6084/m9.figshare.13204856.v1. These should be placed in the [`data/`](data/) folder. The full samples contain 10^7 events each; without these the plotting scripts will use instead the 'short' sample files provided, each of which is 10^5 events.
 
-### Re-interpreting the results
+### The pipeline
 
-If you would like to re-compute the AMC distributions assuming a different axion mass or initial mass function, the mass function can be specified in [`code/mass_function.py`](code/mass_function.py). For a power-law mass function, you can simply edit the command
-```python
-AMC_MF = mass_function.PowerLawMassFunction(m_a, gamma)
-```
-in the scripts [`code/prepare_distributions.py`](code/prepare_distributions.py) and [`code/simulate_signal.py`](code/simulate_signal.py). The new AMC distributions and signal samples can then be computed with 
-```bash
-./GetDistributions.sh
-```
-and 
-```bash
-./GetSignals.sh
-```
-Note that these commands will replace the distribution and signal sample files which are already in the repository. You can specify the `IDstr` variable hard-coded in [`code/prepare_distributions.py`](code/prepare_distributions.py) and [`code/simulate_signal.py`](code/simulate_signal.py) to add a file suffix so that the old files are not overwritten.
+After a substantial update, you now specify most of the parameters as function arguments. These include the axion mass, density profile, mass function and galaxy. 
 
-**Setting different parameters:** Inevitably, you'll want to specify different parameters to the simulations, as well as differentiating between different simulations. The file [`code/params.py`](code/params.py) allows you to do this relatively straight-forwardly. At the moment, it allows you to specify:
-- The axion mass `m_a`  
-- The minimum density enhancement `k` to consider inside axion miniclusters (that is, encounters for which the AMC internal density does not exceed the smooth Galactic background density by at least a factor `k` will be ignore)  
-- An identification string, which will be used to save output files: `IDstr`.
+In particular:
+	- `profile`: Internal AMC density profile. Options: `PL`, `NFW`
+	- `mass_function_ID`: String identifying the mass function you want to use:
+		* `powerlaw` - standard power-law mass function, with log-slope gamma = -0.7
+		* `delta_a` - delta function mass function, centred on the average mass of a `powerlaw` function
+		* `delta_c` - delta function, centred on the characteristic AMC mass
+		* `delta_p` - delta function, centred on the peak of the AMC mass function at MRE. 
+	- `galaxyID`: String identifying the galaxy to be used. Options: `MW`, `M31`.
 
-### Generating quick results with delta-function mass functions
-
-As of July 2021, new scripts have been added for preparing distributions and simulating signals for *delta-function mass functions of AMCs* - [`code/prepare_distributions_delta.py`](code/prepare_distributions_delta.py) and [`code/simulate_signal_delta.py`](code/simulate_signal_delta.py). These scripts accept the flag `-mass_choice` with `-mass_choice c` fixing the AMC mass to be equal to the characteristic AMC mass `M_0` and `-mass_choice a` fixing the AMC mass to be equal to the mean AMC mass, given a power-law mass function. The files which are output by these scripts will have filenames appended with `_delta_a` or `_delta_c`, along with whatever value of `IDstr` is specified in the `params.py` file. 
-
-To run these scripts, you'll need to download the raw Monte Carlo data files mentioned above. However, you shouldn't need to re-run Monte Carlos, as the characteristic and mean AMC masses are almost always well within the range of masses which were simulated. 
-
-As a rough example of running the full pipeline in this case, you could run:
-```bash
-python3 prepare_distributions_delta.py -profile PL -mass_choice a -AScut -max_rows 10000
-python3 simulate_signal_delta.py -profile PL -mass_choice a -AScut -Ne 1e5
-```
-This should save a list of encounters in the `data/` folder (in two different formats, depending on how you want to use them). You can also then run [`code/plotting/CalcEncounterRate.py`](code/plotting/CalcEncounterRate.py) (passing the appropriate `-IDstr` flag) to calculate the total encounter rate.
+An example of the pipeline can be found in [`code/RunPipeline.py`](code/RunPipeline.py). As always, you should edit [`code/dirs.py`](code/dirs.py) so that the directory variables point to the right place.
 
 
 ### Citation
