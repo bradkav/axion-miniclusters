@@ -23,13 +23,13 @@ Full samples of radio signal events due to AMC-NS encounters are archived online
 After a substantial update, you now specify most of the parameters as function arguments. These include the axion mass, density profile, mass function and galaxy. 
 
 In particular:
-	- `profile`: Internal AMC density profile. Options: `PL`, `NFW`
-	- `mass_function_ID`: String identifying the mass function you want to use:
-		* `powerlaw` - standard power-law mass function, with log-slope gamma = -0.7
-		* `delta_a` - delta function mass function, centred on the average mass of a `powerlaw` function
-		* `delta_c` - delta function, centred on the characteristic AMC mass
-		* `delta_p` - delta function, centred on the peak of the AMC mass function at MRE. 
-	- `galaxyID`: String identifying the galaxy to be used. Options: `MW`, `M31`.
+- `profile`: Internal AMC density profile. Options: `"PL"`, `"NFW"`
+- `mass_function_ID`: String identifying the mass function you want to use:
+   * `"powerlaw"` - standard power-law mass function, with log-slope gamma = -0.7
+   * `"delta_a"` - delta function mass function, centred on the average mass of a `powerlaw` function
+   * `"delta_c"` - delta function, centred on the characteristic AMC mass
+   * `"delta_p"` - delta function, centred on the peak of the AMC mass function at MRE. 
+- `galaxyID`: String identifying the galaxy to be used. Options: `"MW"`, `"M31"`.
 
 An example of the pipeline can be found in [`code/RunPipeline.py`](code/RunPipeline.py). As always, you should edit [`code/dirs.py`](code/dirs.py) so that the directory variables point to the right place.
 
