@@ -49,20 +49,20 @@ Nbins_mass = 300
 # -------- OPTIONS ----------------
 # ---------------------------------
 
-def sample_encounters(Ne, m_a, profile,  mass_function_ID, galaxyID = "MW", circular=False, AScut = False, unperturbed=False, IDstr=""):
+def sample_encounters(Ne, m_a, profile,  AMC_MF, galaxyID = "MW", circular=False, AScut = False, unperturbed=False, IDstr=""):
 
     Ne = int(Ne)
 
-    file_suffix_in = tools.generate_suffix(profile, mass_function_ID, circular=circular,
+    file_suffix_in = tools.generate_suffix(profile, AMC_MF, circular=circular,
                                         AScut=False, unperturbed=unperturbed, IDstr=IDstr, verbose=False)
                                         
     #We need different labels for the input and output files, because
     #we may also need to label the outputs with "AScut" if we use that option
-    file_suffix_out = tools.generate_suffix(profile, mass_function_ID, circular=circular,
+    file_suffix_out = tools.generate_suffix(profile, AMC_MF, circular=circular,
                                         AScut=AScut, unperturbed=unperturbed, IDstr=IDstr, verbose=True)
     
     #Set up the mass function
-    AMC_MF, M0 = mass_function.get_mass_function(mass_function_ID, m_a, profile, unperturbed=unperturbed, Nbins_mass=Nbins_mass)
+    M0 = AMC_MF.M0
 
     if (galaxyID == "MW"):
         Galaxy = MilkyWay
@@ -191,7 +191,7 @@ def sample_encounters(Ne, m_a, profile,  mass_function_ID, galaxyID = "MW", circ
     MC_rho = np.zeros(Ne)
 
 
-    for l, R in enumerate(tqdm(R_sample, desc="Sampling encounters")):
+    for l, R in enumerate(tqdm(R_sample, desc="> Sampling encounters")):
 
         # Draw a value of z for the encounter
         dpdz = lambda Z: Galaxy.dPdZ(Z)
@@ -393,7 +393,11 @@ def getOptions(args=sys.argv[1:]):
     
 if __name__ == '__main__':
     opts = getOptions(sys.argv[1:])
+    
+    #Create a mass function based on the input "mass function ID"
+    AMC_MF = get_mass_function(opts.MF_ID, opts.m_a, opts.profile)
+    AMC_MF.label = opts.MF_ID
 
-    sample_encounters(opts.Ne, opts.m_a, opts.profile, opts.MF_ID,  opts.galaxyID,  opts.circular, opts.AScut, opts.unperturbed, opts.IDstr)
+    sample_encounters(opts.Ne, opts.m_a, opts.profile, AMC_MF,  opts.galaxyID,  opts.circular, opts.AScut, opts.unperturbed, opts.IDstr)
 
 

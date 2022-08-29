@@ -23,9 +23,9 @@ INCLUDE_SOLAR_RADIUS = False
 
 
 #------ Plot survival probability (as a function of a) --------------------
-def plot_psurv_a(profile, mass_function_ID, IDstr="", save_plot=False, show_plot=True):
+def plot_psurv_a(profile, AMC_MF, IDstr="", save_plot=False, show_plot=True):
     
-    file_suffix = tools.generate_suffix(profile, mass_function_ID, circular=False,
+    file_suffix = tools.generate_suffix(profile, AMC_MF, circular=False,
                                         AScut=False, unperturbed=False, IDstr=IDstr)
 
 
@@ -50,7 +50,7 @@ def plot_psurv_a(profile, mass_function_ID, IDstr="", save_plot=False, show_plot
 
     plt.xlabel('Galactocentric semi-major axis $a$ [pc]')
     plt.ylabel('Survival Probability')
-    plt.title(f"Density profile: {profile}; Mass function: {mass_function_ID.replace('_', '-')}")
+    plt.title(f"Density profile: {profile}; Mass function: {AMC_MF.label.replace('_', '-')}")
     
     plt.legend(loc='upper left', fontsize=14)
     
@@ -61,9 +61,9 @@ def plot_psurv_a(profile, mass_function_ID, IDstr="", save_plot=False, show_plot
         plt.show()
 
 #------ Plot survival probability (as a function of R) --------------------
-def plot_psurv_r(profile, mass_function_ID,  IDstr="", circular=False, save_plot=False, show_plot=True):
+def plot_psurv_r(profile, AMC_MF,  IDstr="", circular=False, save_plot=False, show_plot=True):
 
-    file_suffix = tools.generate_suffix(profile, mass_function_ID, circular=circular,
+    file_suffix = tools.generate_suffix(profile, AMC_MF, circular=circular,
                                         AScut=False, unperturbed=False, IDstr=IDstr)
 
     Rlist, psurv_R, psurv_R_AScut = np.loadtxt(root_dir + 'SurvivalProbability_R_' + file_suffix +'.txt', delimiter =',', dtype='f8', usecols=(0, 1, 2), unpack=True)
@@ -90,7 +90,7 @@ def plot_psurv_r(profile, mass_function_ID,  IDstr="", circular=False, save_plot
     plt.xlabel('Galactocentric radius $r$ [pc]')
     plt.ylabel('Survival Probability')
     #plt.legend(loc = 'lower right' , fontsize=12)
-    plt.title(f"Density profile: {profile}; Mass function: {mass_function_ID.replace('_', '-')}")
+    plt.title(f"Density profile: {profile}; Mass function: {AMC_MF.label.replace('_', '-')}")
     
     plt.legend(loc='upper left', fontsize=14)
     
@@ -102,9 +102,9 @@ def plot_psurv_r(profile, mass_function_ID,  IDstr="", circular=False, save_plot
         
 #-------- Plot encounter rate distribution ----------
 
-def plot_encounter_rate(profile, mass_function_ID,  IDstr="", circular=False, save_plot=False, show_plot=True):
+def plot_encounter_rate(profile, AMC_MF,  IDstr="", circular=False, save_plot=False, show_plot=True):
 
-    file_suffix = tools.generate_suffix(profile, mass_function_ID, circular=False,
+    file_suffix = tools.generate_suffix(profile, AMC_MF, circular=False,
                                         AScut=False, unperturbed=False, IDstr=IDstr)
 
     plt.figure(figsize=(7,5))
@@ -127,8 +127,8 @@ def plot_encounter_rate(profile, mass_function_ID,  IDstr="", circular=False, sa
     Gamma = np.trapz(PDF_R, Rlist)*3600*24
     Gamma_AScut = np.trapz(PDF_R_AScut, Rlist)*3600*24
 
-    print("Encounter rate (without AScut)[day^-1]:\t", Gamma)
-    print("Encounter rate (including AScut) [day^-1]:\t", Gamma_AScut)
+    #print("Encounter rate (without AScut)[day^-1]:\t", Gamma)
+    #print("Encounter rate (including AScut) [day^-1]:\t", Gamma_AScut)
 
 
     plt.text(0.35, 0.9, r"$\Gamma (\textrm{all}) = %.1f\,\,\mathrm{day}^{-1}$"%(Gamma),bbox=props,transform=plt.gca().transAxes, fontsize=16, color='k')
@@ -141,7 +141,7 @@ def plot_encounter_rate(profile, mass_function_ID,  IDstr="", circular=False, sa
     plt.xlabel(r'Galactocentric radius $r$ [pc]')
     plt.ylabel(r'Encounter rate $\mathrm{d}\Gamma/\mathrm{d}r$ [pc$^{-1}$ s$^{-1}$]')
     #plt.legend(loc = 'upper left' , fontsize=15)
-    plt.title(f"Density profile: {profile}; Mass function: {mass_function_ID.replace('_', '-')}")
+    plt.title(f"Density profile: {profile}; Mass function: {AMC_MF.label.replace('_', '-')}")
 
     plt.legend(loc='upper left', fontsize=14)
 

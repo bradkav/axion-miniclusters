@@ -51,16 +51,20 @@ Nbins_radius = 300  # Previously 500
 k_AMC = (3 / (4 * np.pi)) ** (1 / 3)
 
 
-def prepare_distributions(m_a, profile,  mass_function_ID, galaxyID = "MW", circular=False, unperturbed=False,max_rows=None,  IDstr=""):
+def prepare_distributions(m_a, profile, AMC_MF, galaxyID = "MW", circular=False, unperturbed=False,max_rows=None,  IDstr=""):
         
-    file_suffix = tools.generate_suffix(profile, mass_function_ID, circular=circular,
+        
+        
+    file_suffix = tools.generate_suffix(profile, AMC_MF, circular=circular,
                                         AScut=False, unperturbed=unperturbed, IDstr=IDstr, verbose=False)
                                         
-    file_suffix_AScut = tools.generate_suffix(profile, mass_function_ID, circular=circular,
+    file_suffix_AScut = tools.generate_suffix(profile, AMC_MF, circular=circular,
                                         AScut=True, unperturbed=unperturbed, IDstr=IDstr, verbose=False)
     
     #Set up the mass function
-    AMC_MF, M0 = mass_function.get_mass_function(mass_function_ID, m_a, profile, unperturbed=unperturbed, Nbins_mass=Nbins_mass)
+    M0 = AMC_MF.M0
+    
+    print(file_suffix)
     
     # Gather the list of files to be used, then loop over semi-major axis a
     a_grid = None
@@ -164,7 +168,7 @@ def prepare_distributions(m_a, profile,  mass_function_ID, galaxyID = "MW", circ
 
 
     
-    for i, R in enumerate(tqdm(R_centres, desc = "Calculating distributions")):
+    for i, R in enumerate(tqdm(R_centres, desc = "> Calculating distributions")):
         R = R_centres[i]
         #print(i, "\t - R [pc]:", R)
         if unperturbed:
@@ -213,7 +217,7 @@ def load_AMC_results(alist, file_suffix, unperturbed, max_rows):
     e_all = np.array([])
     a_all = np.array([])
 
-    for i, a_kpc in enumerate(tqdm(a_vals, desc="Loading Monte Carlo simulations")):
+    for i, a_kpc in enumerate(tqdm(a_vals, desc="> Loading Monte Carlo simulations")):
         fname = dirs.montecarlo_dir + f"AMC_samples_a={a_kpc*1e3:.4f}_{file_suffix}.txt"
 
         columns = (3, 4,) 
@@ -334,7 +338,7 @@ def calculate_weights(R_bin_edges, a_grid, a, e, mass, mass_ini, radius, Galaxy,
         # #ImportanceSampling
 
     weights = np.zeros([a.size, R_bin_edges.size - 1])
-    for i in tqdm(range(a.size), desc="Calculating weights"):
+    for i in tqdm(range(a.size), desc="> Calculating weights"):
         a_ind = np.isclose(a_grid,a[i], rtol=1e-5)
         if (circular):
             w = [a[i] == a_grid]
@@ -621,6 +625,10 @@ def getOptions(args=sys.argv[1:]):
 if __name__ == '__main__':
     opts = getOptions(sys.argv[1:])
     
-    prepare_distributions(opts.m_a, opts.profile, opts.MF_ID,  opts.galaxyID,  opts.circular, opts.unperturbed, opts.max_rows, opts.IDstr)
+    #Create a mass function based on the input "mass function ID"
+    AMC_MF = get_mass_function(opts.MF_ID, opts.m_a, opts.profile)
+    AMC_MF.label = opts.MF_ID
+    
+    prepare_distributions(opts.m_a, opts.profile, AMC_MF,  opts.galaxyID,  opts.circular, opts.unperturbed, opts.max_rows, opts.IDstr)
 
 

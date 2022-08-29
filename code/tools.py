@@ -3,7 +3,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 #Generate an ID suffix which can label the filenames
-def generate_suffix(profile, mass_function_ID, circular=False, AScut=False, unperturbed=False,IDstr="", verbose=False):
+def generate_suffix(profile, AMC_MF, circular=False, AScut=False, unperturbed=False,IDstr="", verbose=False):
     
     #Prepare file ID strings
     circ_text = ""
@@ -21,8 +21,11 @@ def generate_suffix(profile, mass_function_ID, circular=False, AScut=False, unpe
         if verbose: print("> Calculating unperturbed distributions...")
         pert_text = "_unpert"
     
+    mass_function_label = ""
+    if hasattr(AMC_MF, "label"):
+        mass_function_label = "_" + AMC_MF.label
  
-    return profile + "_" + mass_function_ID + circ_text + pert_text + IDstr
+    return profile + mass_function_label + circ_text + pert_text + IDstr
     
 #Axion star radius
 def r_AS(M_AMC, m_a):

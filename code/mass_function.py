@@ -118,7 +118,7 @@ def get_mass_function(ID, m_a, profile, Nbins_mass=300, unperturbed=False):
     if (ID in ["delta_a", "delta_c", "delta_p"]):
         AMC_MF = DeltaMassFunction(m_a=m_a, M0=M0, Nbins_mass=Nbins_mass)
     
-    return AMC_MF, M0
+    return AMC_MF
 
 #Calculate the mass of a minicluster of tidal stripping from the MW:
 #Sec. 2.2 of https://arxiv.org/abs/1403.6827

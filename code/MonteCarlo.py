@@ -17,6 +17,7 @@ except ImportError as err:
         
 import argparse
 import sys
+import tools
 
 import dirs
 import params
@@ -31,7 +32,7 @@ VERBOSE = False
 
 
 #This script can also be run stand-alone, with command-line arguments defined at the bottom of this file, using the `getOptions` function
-def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, mass_function_ID = "powerlaw", galaxyID = "MW", circular=False, IDstr=""):
+def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, AMC_MF, galaxyID = "MW", circular=False, IDstr=""):
 
     if (galaxyID == "MW"):
         Galaxy = MilkyWay
@@ -40,14 +41,7 @@ def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, mass_function_ID = "powerlaw", g
     else:
         raise ValueError("Invalid galaxyID.")
 
-    #Specify the mass function for the AMCs
-    #ACTION: Specify mass function
-    
-    #MF = mass_function.ExampleMassFunction()      #This is a completely made up (slightly more complicated) mass function
-    #MF = mass_function.PowerLawMassFunction(m_a, gamma=params.gamma, profile=profile) #This corresponds to one of the mass function we use in the paper
-    
-    #Set up the mass function
-    AMC_MF, M0 = mass_function.get_mass_function(mass_function_ID, m_a, profile)
+    M0 = AMC_MF.M0
 
     # Perturber parameters
     Mp = 1.0*Galaxy.M_star_avg
@@ -241,53 +235,8 @@ def Run_AMC_MonteCarlo(a0, N_AMC, m_a, profile, mass_function_ID = "powerlaw", g
     if (VERBOSE):
         print("p_surv = ", np.sum(M_list_final > 1e-29)/len(M_list_initial))
         print("p_surv (M_f > 10% M_i) = ", np.sum(M_list_final/M_list_initial > 1e-1)/len(M_list_initial))
-    # print(R_list_initial, R_list_final)
 
-    # ecc_str = '_ecc'
-    # if (circular == True):
-    #     ecc_str = ''
-
-    # import matplotlib.pyplot as plt
-    # plt.figure(figsize=(7,5))
-    # plt.hist(Ntotal_list, bins=np.linspace(0, 200, num=50))
-
-    # plt.xlim(0,100)
-    # plt.ylim(0,800)
-    # plt.xlabel("Total Interactions")
-    # plt.ylabel("$N_\mathrm{AMC}$")
-    # plt.savefig('../plots/MC_testdistNtot_%.1f%s.pdf'%(Rkpc, ecc_str), bbox_inches='tight')
-
-
-    # plt.figure(figsize=(7,5))
-    # plt.hist(R_list_initial, alpha = 0.5, bins=np.geomspace(1e-8, 1e-2, 50), label='Initial')
-    # plt.hist(R_list_final, alpha = 0.5, bins=np.geomspace(1e-8, 1e-2, 50), label='Final')
-
-    # plt.gca().set_yscale('log')
-    # plt.gca().set_xscale('log')
-    # plt.xlabel("$R_\mathrm{AMC}$ $[\mathrm{pc}]$")
-    # plt.ylabel("$N_\mathrm{AMC}$")
-    # plt.legend(loc='upper right')
-    # plt.savefig('../plots/MC_testdistR%s.pdf'%(ecc_str,), bbox_inches='tight')
-
-    # plt.figure(figsize=(7,5))
-    # plt.hist(M_list_initial, alpha = 0.5, bins=np.geomspace(M_list_initial.min(), M_list_initial.max(), 50), label='Initial')
-    # plt.hist(M_list_final, alpha = 0.5, bins=np.geomspace(M_list_initial.min(), M_list_initial.max(), 50), label='Final')
-
-    # plt.gca().set_yscale('log')
-    # plt.gca().set_xscale('log')
-    # plt.xlabel("$M_\mathrm{AMC}$ $[M_{\odot}]$")
-    # plt.ylabel("$N_\mathrm{AMC}$")
-    # plt.legend(loc='upper right')
-    # plt.savefig('../plots/MC_testdistM%s.pdf'%(ecc_str,), bbox_inches='tight')
-    #---------------------------------------------
-
-    #print(circular)
-    if (circular):
-        circ_text = '_circ'
-    else:
-        circ_text = ''
-        
-    file_suffix = profile + "_" + mass_function_ID + circ_text  + IDstr
+    file_suffix = tools.generate_suffix(profile, AMC_MF, circular=circular, IDstr=IDstr, verbose=False)
 
     Results = np.column_stack([M_list_initial, R_list_initial, rho_list_initial, M_list_final, R_list_final, rho_list_final, e_list, psi_list])
     if (SAVE_OUTPUT):
@@ -316,4 +265,8 @@ def getOptions(args=sys.argv[1:]):
 if __name__ == '__main__':
     opts = getOptions(sys.argv[1:])
     
-    Run_AMC_MonteCarlo(opts.semi_major_axis, opts.AMC_number, opts.m_a, opts.profile, opts.MF_ID, opts.galaxyID, opts.circular, opts.IDstr)
+    #Create a mass function based on the input "mass function ID"
+    AMC_MF = get_mass_function(opts.MF_ID, opts.m_a, opts.profile)
+    AMC_MF.label = opts.MF_ID
+    
+    Run_AMC_MonteCarlo(opts.semi_major_axis, opts.AMC_number, opts.m_a, opts.profile, AMC_MF, opts.galaxyID, opts.circular, opts.IDstr)
