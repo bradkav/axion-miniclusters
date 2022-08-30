@@ -4,6 +4,10 @@
 
 *Code and results for the disruption of axion miniclusters (AMCs) in the Milky Way, as well as radio signals from encounters between AMCs and neutrons stars.*
 
+
+**Note: The most up-to-date code is being developed in the [`genericAMC` branch](https://github.com/bradkav/axion-miniclusters/tree/genericAMC).**
+
+
 The key parts of the computation are:
 * Calculation of the perturbations to individual AMCs due to stellar encounters ([`code/Distribution_PL.ipynb`](code/Distribution_PL.ipynb) and [`code/Distribution_NFW.ipynb`](code/Distribution_NFW.ipynb)) 
 * Monte Carlo simulations of the disruption of individual AMCs orbiting in the Milky Way ([`code/MC_script_ecc.py`](code/MC_script_ecc.py))  
