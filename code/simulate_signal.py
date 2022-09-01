@@ -369,7 +369,7 @@ def sample_encounters(Ne, m_a, profile,  AMC_MF, galaxyID = "MW", circular=False
         header="B0 [G], Period [s], Misalignment angle [radians], NS Age [Myr], x [pc], y [pc], z [pc], AMC density [Msun/pc^3], AMC radius [pc], AMC mass [Msun],  Impact parameter [pc], Relative velocity [pc/s]",
         fmt="%.5e",
     )
-    return 0
+    return b/ut
 
 
 def getOptions(args=sys.argv[1:]):

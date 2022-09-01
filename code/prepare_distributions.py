@@ -203,6 +203,7 @@ def prepare_distributions(m_a, profile, AMC_MF, galaxyID = "MW", circular=False,
         header="Columns: R orbit [pc], surv_prob, Encounter radial distrib (dGamma/dR [pc^-1 s^-1])",
     )
 
+    return np.trapz(PDF_list, R_centres), np.trapz(PDF_list_AScut, R_centres)
 
 # ------------------------------
 
