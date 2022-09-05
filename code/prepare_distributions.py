@@ -548,14 +548,18 @@ def calc_distributions(R, mass_ini, mass, radius, weights_R, Galaxy, AMC_MF, unp
             # Factor of sqrt(2) because it's the relative velocity (difference between 2 MB distributions)
             sigma_u = np.sqrt(2) * Galaxy.sigma(R) * (3.24078e-14)  # pc/s
             M_NS = 1.4
-            R_cut = G_N * M_NS / sigma_u ** 2
-            sigmau_corr = (
-                np.sqrt(8 * np.pi)
-                * sigma_u
-                * ri ** 2
-                * (1.0 + R_cut / r)
-                * np.minimum(x_cut ** 2, np.ones_like(r))
-            )
+            R_NS = 11*3.24078e-14
+            
+            vesc_NS = np.sqrt(2*G_N*M_NS/R_NS)
+            
+            #R_cut = G_N * M_NS / sigma_u ** 2
+            #sigmau_corr = ( np.sqrt(8 * np.pi) * sigma_u * ri ** 2 * (1.0 + R_cut / r) * np.minimum(x_cut ** 2, np.ones_like(r)) )
+
+            sig_A = np.sqrt(8 * np.pi) * sigma_u * ri ** 2
+            sig_B = np.sqrt(2 * np.pi) * (vesc_NS**2/sigma_u) * R_NS ** 2
+            sig_C = 2*np.pi * ri * R_NS * vesc_NS
+            
+            sigmau_corr = (sig_A + sig_B + sig_C)* np.minimum(x_cut ** 2, np.ones_like(r))
 
             if not AScut:
                 dPdr[i] = np.sum(samp_list)
