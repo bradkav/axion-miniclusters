@@ -295,7 +295,7 @@ class PowerLawMassFunction(GenericMassFunction):
     
 class DeltaMassFunction(GenericMassFunction):
     
-    def __init__(self, m_a, M0, Nbins_mass=300):
+    def __init__(self, m_a, M0, Nbins_mass=300, delta_min = 1.0, delta_max = 3.0):
         
         
         #These parameters are specific to the model we use
@@ -318,8 +318,11 @@ class DeltaMassFunction(GenericMassFunction):
         #before we do any correction for stripping due to the MW halo
         self.mavg = M0
             
-        self.rhomin = rho_of_delta(1)
-        self.rhomax = rho_of_delta(3)
+        self.delta_min = delta_min
+        self.delta_max = delta_max
+            
+        self.rhomin = rho_of_delta(delta_min)
+        self.rhomax = rho_of_delta(delta_max)
         
         
     def dPdlogM_internal(self, mass):
@@ -336,11 +339,9 @@ class DeltaMassFunction(GenericMassFunction):
         Edit this (initial) density distribution, dP/drho
         """
         #Let's use a flat distribution in delta, for simplicity
-        delta_min = 1
-        delta_max = 3
         delta = delta_of_rho_interp(rho)
-        inds = (delta > delta_min) & (delta < delta_max) 
-        P = (1/(delta_max - delta_min))*inds #Uniform distribution
+        inds = (delta > self.delta_min) & (delta < self.delta_max) 
+        P = (1/(self.delta_max - self.delta_min))*inds #Uniform distribution
         drhoddelta = 140*(rho_eq/2.0)*(delta**3 + 3*(1+delta)*delta**2)
         return P/drhoddelta #dP/drho = dP/ddelta/(drho/ddelta)
         

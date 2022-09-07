@@ -214,7 +214,7 @@ def sample_encounters(Ne, m_a, profile,  AMC_MF, galaxyID = "MW", circular=False
                 Pr_check = np.sum(interp_r_corr(dist_r))
                 if (Pr_check <= 0):
                     #print("Trying next radius...")
-                    smallest += 1
+                    smallest -= 1
             
         
         alpha_AS = r_AS(1.0, m_a)

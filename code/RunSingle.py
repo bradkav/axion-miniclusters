@@ -27,13 +27,13 @@ galaxyID = "M31"
             
 #---------- Calculation Parameters -------
             
-N_AMC = 200 #Number of AMCs to simulate for each radius in the Monte Carlos
+N_AMC = 1000 #Number of AMCs to simulate for each radius in the Monte Carlos
 circular = False
 a_list = np.geomspace(1e-2, 50e3, 50) #pc
 AScut = False
-Ne = 5000 #Number of AMC-NS encounters to generate 
+Ne = 10000 #Number of AMC-NS encounters to generate 
 
-IDstr = "_M31_delta_30"
+IDstr = "_M31_youngNS_delta_10"
 
 #print(mass_function.rho_of_delta(1.0))
 
@@ -56,7 +56,7 @@ IDstr = "_M31_delta_30"
 #---------- Run Monte Carlo Simulations ----------
 
 def run_AMC_mass(M_AMC):
-    AMC_MF = mass_function.DeltaMassFunction(m_a=m_a, M0=M_AMC, delta_min=29.7, delta_max=30.3)
+    AMC_MF = mass_function.DeltaMassFunction(m_a=m_a, M0=M_AMC, delta_min=9.9, delta_max=10.1)
     AMC_MF.label = f"M_AMC_{M_AMC:.2e}"
 
     
@@ -88,7 +88,7 @@ def run_AMC_mass(M_AMC):
     return Gamma, Gamma_AScut, T_lower, T_med, T_upper
     
 # Need to fix code to load from file it simulation is already done
-M_list = np.geomspace(1e-18, 1e-5, 14)
+M_list = np.array([1e-18])
 #print(M_list)
 
 gamma_list = 0.0*M_list

@@ -57,6 +57,7 @@ def Vcirc(Mstar, r):
     return np.sqrt(G_pc * (Mstar + Menc(r)) / r)  # pc/s
 
 
+
 #-----------------
 
 
@@ -68,9 +69,9 @@ columns = ["B0", "T", "theta","t", "x", "y", "z"]
 
     
 #print("Reading XXX_3.dat...")
-NS_fname = "Population_Model_CMZ_2.dat"
+#NS_fname = "Population_Model_CMZ_2.dat"
 #Use the following line for a very young NS sample:
-#NS_fname = "Population_Model_CMZ_3.dat"
+NS_fname = "Population_Model_CMZ_3.dat"
 
 #print("Reading " + NS_fname)
 data_CMZ = np.load(dirs.NS_data + NS_fname)
@@ -93,7 +94,7 @@ z_CMZ = 0.5*(z_bins_CMZ[1:] + z_bins_CMZ[:-1])
 
 #print("Number of CMZ NSs:", N_CMZ)
 
-data_GC = np.load("../data/Population_Model__FastDecay_Androm_Long.npy")
+data_GC = np.load(dirs.NS_data + "Population_Model__FastDecay_Androm_Long.npy")
 GC_dict = {columns[i]: data_GC[:,i] for i in range(len(columns))}
 for key in ["x", "y", "z"]:
     GC_dict[key] *= 25.0/16.1
