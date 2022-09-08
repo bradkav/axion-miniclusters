@@ -18,6 +18,10 @@ The raw Monte Carlo results are archived online at https://doi.org/10.6084/m9.fi
 
 Full samples of radio signal events due to AMC-NS encounters are archived online at https://doi.org/10.6084/m9.figshare.13204856.v1. These should be placed in the [`data/`](data/) folder. The full samples contain 10^7 events each; without these the plotting scripts will use instead the 'short' sample files provided, each of which is 10^5 events.
 
+### Updates
+
+- **08/09/2022:** Major restructuring of the code to accept generic AMC mass functions and to allow for a smoother running of the pipeline.
+
 ### The pipeline
 
 After a substantial update, you now specify most of the parameters as function arguments. These include the axion mass, density profile, mass function and galaxy. 
