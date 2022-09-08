@@ -20,6 +20,13 @@ Functions in the `GenericMassFunction` class are then available to sample the AM
 
 Once you've defined your mass function, edit a couple of scripts to point to this mass function. In particular, `MC_script_ecc.py` and `prepare_distributions.py` (look for the comment `#ACTION: Specify mass function`).
 
+------------
+
+## Warning
+
+**The rest of this guide is now outdated. Please take a look in [`scripts`](scripts/) for examples of how to run the pipeline.**
+
+-------------
 
 **4. Run the code**
 
