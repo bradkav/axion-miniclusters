@@ -9,3 +9,7 @@ Processing.ipynb
 .DS_Store
 data/distributions/*.txt
 data/distributions/*.txt.gz
+data/SurvivalProbability*
+plots/SurvivalProbability*
+plots/EncounterRate*
+data/EncounterRate*
