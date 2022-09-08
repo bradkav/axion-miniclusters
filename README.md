@@ -4,10 +4,6 @@
 
 *Code and results for the disruption of axion miniclusters (AMCs) in the Milky Way, as well as radio signals from encounters between AMCs and neutrons stars.*
 
-
-**Note: The most up-to-date code is being developed in the [`genericAMC` branch](https://github.com/bradkav/axion-miniclusters/tree/genericAMC).**
-
-
 The key parts of the computation are:
 * Calculation of the perturbations to individual AMCs due to stellar encounters ([`code/Distribution_PL.ipynb`](code/Distribution_PL.ipynb) and [`code/Distribution_NFW.ipynb`](code/Distribution_NFW.ipynb)) 
 * Monte Carlo simulations of the disruption of individual AMCs orbiting in the Milky Way ([`code/MonteCarlo.py`](code/MonteCarlo.py))  
@@ -16,7 +12,7 @@ The key parts of the computation are:
 
 Scripts for generating plots from the results are in [`code/plotting/`](code/plotting). The first thing to do is to edit [`code/dirs.py`](code/dirs.py) so that the directory variables point to the right place.
 
-**An example script showing how to run the pipeline 'end-to-end' is given in [`code/RunPipeline.py`](code/RunPipeline.py).**
+**An example script showing how to run the pipeline 'end-to-end' is given in [`code/scripts/RunPipeline.py`](code/scripts/RunPipeline.py).** 
 
 The raw Monte Carlo results are archived online at https://doi.org/10.6084/m9.figshare.13224386.v1. Edit the file [`code/dirs.py`](code/dirs.py) to specify the directory where these Monte Carlo results are located (though the raw files are only needed if you want to re-calculate the AMC distributions).
 
@@ -28,15 +24,16 @@ After a substantial update, you now specify most of the parameters as function a
 
 In particular:
 - `profile`: Internal AMC density profile. Options: `"PL"`, `"NFW"`
-- `mass_function_ID`: String identifying the mass function you want to use:
+- `AMC_MF`: Mass function object, which can be created 'from scratch' or by using the function `mass_function.get_mass_function` and supplying one of the following `ID` strings:
    * `"powerlaw"` - standard power-law mass function, with log-slope gamma = -0.7
    * `"delta_a"` - delta function mass function, centred on the average mass of a `powerlaw` function
    * `"delta_c"` - delta function, centred on the characteristic AMC mass
    * `"delta_p"` - delta function, centred on the peak of the AMC mass function at MRE. 
 - `galaxyID`: String identifying the galaxy to be used. Options: `"MW"`, `"M31"`.
 
-An example of the pipeline can be found in [`code/RunPipeline.py`](code/RunPipeline.py). As always, you should edit [`code/dirs.py`](code/dirs.py) so that the directory variables point to the right place.
+An example of the pipeline can be found in [`code/scripts/RunPipeline.py`](code/scripts/RunPipeline.py). As always, you should edit [`code/dirs.py`](code/dirs.py) so that the directory variables point to the right place.
 
+You can also run the pipeline over a grid of masses using [`code/scripts/RunMassGrid.py`](code/scripts/RunMassGrid.py). The results can then be plotted with [`code/plotting/PlotRates_AMCmass.py`](code/plotting/PlotRates_AMCmass.py).
 
 ### Citation
 

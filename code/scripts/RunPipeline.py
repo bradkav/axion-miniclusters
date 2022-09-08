@@ -1,7 +1,10 @@
 import numpy as np
+import sys
+
+sys.path.append('../')
+
 import dirs
 import params
-
 import mass_function
 
 from MonteCarlo import Run_AMC_MonteCarlo
@@ -23,13 +26,11 @@ m_a = 35.16e-6
 profile = "PL"
 galaxyID = "M31"
 
-            
 #---------- Calculation Parameters -------
             
-N_AMC = 10 #Number of AMCs to simulate for each radius in the Monte Carlos
+N_AMC = 100 #Number of AMCs to simulate for each radius in the Monte Carlos
 circular = False
-a_list = np.geomspace(1e-2, 50e3, 50) #pc
-AScut = False
+a_list = np.geomspace(1e-2, 50e3, 50) #Semi-major axis grid (in pc)
 Ne = 1000 #Number of AMC-NS encounters to generate 
 
 IDstr = "_test"
@@ -47,7 +48,7 @@ AMC_MF.label = mass_function_ID
 
 #Alternatively, you could just build a mass function from scratch
 #with whatever properties you want.
-#AMC_MF = mass_function.DeltaMassFunction(m_a=m_a, M0=1e-10)
+#AMC_MF = mass_function.DeltaMassFunction(m_a=m_a, M0=1e-14, delta_min=0.99, delta_max=1.01)
 #AMC_MF.label = "MyMassFunction"
 
 #---------- Run Monte Carlo Simulations ----------
@@ -61,7 +62,7 @@ print("> Results saved to " + dirs.montecarlo_dir)
 
 #----------- Prepare distributions ---------------
 
-prepare_distributions(m_a, profile, AMC_MF, galaxyID, circular, IDstr=IDstr)
+Gamma, Gamma_AScut = prepare_distributions(m_a, profile, AMC_MF, galaxyID, circular, IDstr=IDstr)
 
 
 #----------- Plot survival probabilities ----------
@@ -72,4 +73,4 @@ PlotSurv.plot_encounter_rate(profile, AMC_MF,  IDstr, circular=False, save_plot=
 
 #-----------Sample encounters ----------------------
 
-sample_encounters(Ne, m_a, profile,  AMC_MF, galaxyID, circular=circular, AScut = AScut, IDstr=IDstr)
+T_enc_list = sample_encounters(Ne, m_a, profile,  AMC_MF, galaxyID, circular=circular, AScut = False, IDstr=IDstr)

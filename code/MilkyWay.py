@@ -159,7 +159,7 @@ else:
 
     columns = ["B0", "T", "theta","t", "x", "y", "z"]
 
-    data_CMZ = np.load(dirs.NS_data + "Population_Model_CMZ_2.dat")
+    data_CMZ = np.load(dirs.NS_data + "Population_Model_CMZ_3.dat")
     CMZ_dict = {columns[i]: data_CMZ[:,i] for i in range(len(columns))}
     CMZ_dict['r'] = np.sqrt(CMZ_dict['x']**2 + CMZ_dict['y']**2 + CMZ_dict['z']**2)
 
@@ -167,7 +167,7 @@ else:
     P_r_CMZ, r_bins_CMZ = np.histogram(CMZ_dict['r'], bins=100, density=True)
     r_CMZ = 0.5*(r_bins_CMZ[1:] + r_bins_CMZ[:-1])
 
-    data_GC = np.load("../data/Population_Model__FastDecay_Androm_Long.npy")
+    data_GC = np.load(dirs.NS_data + "Population_Model__FastDecay_Androm_Long.npy")
     GC_dict = {columns[i]: data_GC[:,i] for i in range(len(columns))}
     GC_dict['r'] = np.sqrt(GC_dict['x']**2 + GC_dict['y']**2 + GC_dict['z']**2)
 

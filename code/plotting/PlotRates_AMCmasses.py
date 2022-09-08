@@ -7,6 +7,7 @@ import sys
 sys.path.append('../')
 
 import AMC
+import dirs
 
 def calcM0(m_a):
     return 1e-11*(20e-6/m_a)**(1/2)
@@ -18,7 +19,7 @@ def freq_to_ma(f): #f in GHz
 IDstr = "_M31_delta_1"
 
 #M_list_old, gamma_list_old, _, _, _, _ = np.loadtxt("../../data/MassGrid.txt", unpack=True)
-M_list, gamma_list, gamma_AScut_list, T_lower_list, T_med_list, T_upper_list = np.loadtxt("../../data/MassGrid" + IDstr + ".txt", unpack=True)
+M_list, gamma_list, gamma_AScut_list, T_lower_list, T_med_list, T_upper_list = np.loadtxt(dirs.data_dir + "MassGrid" + IDstr + ".txt", unpack=True)
 
 fig, ax1 = plt.subplots(figsize=(8,6))
 
@@ -59,6 +60,6 @@ ax2.text(1e-9, 2e4, r"M31, $f_\mathrm{AMC} = 100\%$")
 
 #ax2.axvspan(calcM0(freq_to_ma(12.3)), calcM0(freq_to_ma(7.8)))
 
-plt.savefig("../../plots/EncounterRate_AMC_masses" + IDstr + ".pdf", bbox_inches='tight')
+plt.savefig(dirs.plot_dir + "EncounterRate_AMC_masses" + IDstr + ".pdf", bbox_inches='tight')
 
 plt.show()
