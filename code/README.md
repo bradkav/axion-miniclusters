@@ -1,6 +1,6 @@
 # Code
 
-**Updated:** 25/01/2022
+**Updated:** 08/09/2022
 
 A more detailed guide to using the code, and especially adapting the code for new mass functions and AMC density profiles.
 
